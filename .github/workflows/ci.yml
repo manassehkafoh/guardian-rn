@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  codegen-check:
+    name: Codegen artefacts are fresh
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run codegen
+      - name: Fail if generated files differ from committed
+        run: |
+          git diff --exit-code \
+            packages/guardian-rn/src/generated \
+            packages/guardian-rn/android/src/main/kotlin/com/guardian/rn/generated \
+            packages/guardian-rn/ios/Generated \
+          || (echo "Stale generated artefacts — run `npm run codegen` and commit" && exit 1)
+
+  schema-validate:
+    name: JSON Schema is valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run schema:validate
+
+  typecheck:
+    name: TypeScript type-check
+    runs-on: ubuntu-latest
+    needs: codegen-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run codegen
+      - run: npm run typecheck
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: codegen-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run codegen
+      - run: npm test
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint || true   # non-blocking until lint config is finalised in Phase 2

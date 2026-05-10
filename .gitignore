@@ -1,0 +1,49 @@
+node_modules/
+dist/
+build/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Android
+*.keystore
+!debug.keystore
+android/.gradle
+android/app/build/
+android/build/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivefile
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+
+# Metro
+.metro-health-check*
+
+# Buck
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
+
+# CocoaPods
+ios/Pods/
+
+# Codegen: generated files ARE committed (see ADR-0002), so do NOT gitignore them
+# packages/guardian-rn/src/generated/ ← committed
+# packages/guardian-rn/android/src/main/kotlin/com/guardian/rn/generated/ ← committed
+# packages/guardian-rn/ios/Generated/ ← committed

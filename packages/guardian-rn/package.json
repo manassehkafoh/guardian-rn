@@ -1,0 +1,31 @@
+{
+  "name": "@guardian/rn",
+  "version": "1.0.0-alpha.1",
+  "description": "Production-grade React Native RASP SDK — TurboModule + JSI, pluggable engines, HMAC-signed events",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src/",
+    "android/",
+    "ios/",
+    "react-native.config.js",
+    "*.podspec"
+  ],
+  "keywords": ["react-native", "security", "rasp", "mobile", "runtime-protection"],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.74.0"
+  },
+  "dependencies": {
+    "@guardian/schema": "*"
+  },
+  "codegenConfig": {
+    "name": "GuardianRNSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.guardian.rn"
+    }
+  }
+}

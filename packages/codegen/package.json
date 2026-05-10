@@ -1,0 +1,17 @@
+{
+  "name": "@guardian/codegen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internal codegen tool: JSON Schema → TS types, Kotlin sealed classes, Swift enums",
+  "scripts": {
+    "build": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@guardian/schema": "*",
+    "ajv": "^8.12.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  }
+}

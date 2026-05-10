@@ -1,0 +1,36 @@
+{
+  "name": "guardian-rn-workspace",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "codegen": "tsx packages/codegen/src/index.ts",
+    "schema:validate": "tsx packages/codegen/src/validate.ts",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit --project tsconfig.base.json",
+    "build": "npm run codegen && npm run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.0.0",
+    "simple-git-hooks": "^2.11.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run codegen && git diff --exit-code packages/guardian-rn/src/generated packages/guardian-rn/android/src/main/kotlin/com/guardian/rn/generated packages/guardian-rn/ios/Generated"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathPattern": "src/__tests__"
+  }
+}

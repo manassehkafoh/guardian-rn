@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guardian-rn.io/schema/threat-schema.json",
+  "title": "GuardianSchema",
+  "description": "Single source of truth for guardian-rn domain types. Edit here; run `npm run codegen` to regenerate TS, Kotlin, and Swift artefacts.",
+  "definitions": {
+    "ThreatId": {
+      "type": "string",
+      "enum": [
+        "root",
+        "jailbreak",
+        "debugger",
+        "hooks",
+        "tamper",
+        "emulator",
+        "malware",
+        "screenCapture",
+        "timeSpoofing",
+        "privilegedAccess",
+        "simulator",
+        "unofficialStore",
+        "overlay",
+        "taskHijacking",
+        "repackaging",
+        "systemVPN",
+        "devMode",
+        "adbEnabled",
+        "passcodeMissing",
+        "biometricMissing",
+        "hardwareBackedKeysMissing",
+        "engineFault"
+      ],
+      "description": "All threat identifiers. Any addition requires a codegen run."
+    },
+    "Severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Threat severity level."
+    },
+    "ResponsePolicy": {
+      "type": "string",
+      "enum": ["telemetry", "restrict", "lockout", "kill"],
+      "description": "Response policy per ADR-0005."
+    },
+    "Evidence": {
+      "type": "object",
+      "description": "Arbitrary key-value metadata from the engine. All values must be string-serialisable.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "ThreatPayload": {
+      "type": "object",
+      "required": ["threatId", "severity", "confidence", "ts"],
+      "properties": {
+        "threatId": { "$ref": "#/definitions/ThreatId" },
+        "severity":  { "$ref": "#/definitions/Severity" },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Engine confidence in the detection (0.0–1.0). Used by the policy engine for threshold gating (ADR-0005)."
+        },
+        "evidence": { "$ref": "#/definitions/Evidence" },
+        "ts": {
+          "type": "integer",
+          "description": "Device-clock Unix epoch milliseconds."
+        }
+      },
+      "additionalProperties": false
+    },
+    "GuardianEnvelope": {
+      "type": "object",
+      "required": ["seq", "sessionId", "ts", "hmac", "payload"],
+      "properties": {
+        "seq":       { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "sessionId": { "type": "string", "format": "uuid" },
+        "ts":        { "type": "integer" },
+        "hmac":      { "type": "string", "pattern": "^sha256=[0-9a-f]{64}$" },
+        "payload":   { "$ref": "#/definitions/ThreatPayload" }
+      },
+      "additionalProperties": false,
+      "description": "HMAC-signed transport envelope per ADR-0003."
+    },
+    "BusConfig": {
+      "type": "object",
+      "properties": {
+        "dedupWindowMs":   { "type": "integer", "default": 100 },
+        "rateCapPerSecond": { "type": "integer", "default": 50 }
+      },
+      "additionalProperties": false
+    },
+    "KillPolicyConfig": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "graceMs": { "type": "integer", "minimum": 1000, "default": 3000 }
+      },
+      "additionalProperties": false
+    },
+    "ConfidenceThresholds": {
+      "type": "object",
+      "properties": {
+        "restrict": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.70 },
+        "lockout":  { "type": "number", "minimum": 0, "maximum": 1, "default": 0.85 },
+        "kill":     { "type": "number", "minimum": 0.95, "maximum": 1, "default": 0.95 }
+      },
+      "additionalProperties": false
+    },
+    "GuardianConfig": {
+      "type": "object",
+      "required": ["tenantId"],
+      "properties": {
+        "tenantId": { "type": "string" },
+        "policies": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/ResponsePolicy" },
+          "description": "Per-threatId policy assignment. Unspecified threats default to 'telemetry'."
+        },
+        "confidenceThresholds": { "$ref": "#/definitions/ConfidenceThresholds" },
+        "killPolicy":           { "$ref": "#/definitions/KillPolicyConfig" },
+        "busConfig":            { "$ref": "#/definitions/BusConfig" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

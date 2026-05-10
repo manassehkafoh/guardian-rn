@@ -1,0 +1,8 @@
+{
+  "name": "@guardian/schema",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Single source of truth: JSON Schema for all guardian-rn domain types",
+  "main": "threat-schema.json",
+  "files": ["threat-schema.json"]
+}
