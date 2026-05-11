@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
+import type { EngineContext } from '../engine/Engine.js';
+import { PolicyEngine } from '../core/policy.js';
 
 /**
  * Primary React hook. Starts all configured engines on mount,
- * subscribes to the merged threat stream, and applies response policies.
- * Stops all engines on unmount.
+ * wires the PolicyEngine to every threat event, and stops engines on unmount.
  *
- * Uses useRef for the latest config to avoid the stale-closure bug
- * present in freerasp-rn's useFreeRasp implementation.
+ * Uses configRef to prevent stale-closure bugs — the most recent config is
+ * always used at call-time, avoiding the freerasp-rn listener update issue.
  */
 export function useGuardian(config: GuardianConfig): void {
   const configRef = useRef(config);
@@ -17,8 +18,9 @@ export function useGuardian(config: GuardianConfig): void {
   useEffect(() => {
     const sessionId = generateSessionId();
     const subscriptions: Array<{ unsubscribe(): void }> = [];
+    let policyEngine: PolicyEngine | null = null;
 
-    const ctx = {
+    const ctx: EngineContext = {
       config: configRef.current,
       sessionId,
       platform: getPlatform(),
@@ -28,14 +30,21 @@ export function useGuardian(config: GuardianConfig): void {
     };
 
     const startAll = async (): Promise<void> => {
+      policyEngine = new PolicyEngine(configRef.current);
+
       for (const engine of configRef.current.engines) {
         try {
           await engine.start(ctx);
 
-          const sub = engine.onThreat.subscribe({
-            next: (event: ThreatEvent) => handleThreat(event, configRef.current),
+          const threatSub = engine.onThreat.subscribe({
+            next: (event: ThreatEvent) => policyEngine!.apply(event),
           });
-          subscriptions.push(sub);
+          subscriptions.push(threatSub);
+
+          const healthSub = engine.onHealthTick.subscribe({
+            next: (tick) => configRef.current.telemetry?.recordHealthTick(tick),
+          });
+          subscriptions.push(healthSub);
         } catch (err) {
           ctx.onFault(err instanceof Error ? err : new Error(String(err)));
         }
@@ -45,23 +54,12 @@ export function useGuardian(config: GuardianConfig): void {
     void startAll();
 
     return () => {
-      for (const sub of subscriptions) {
-        sub.unsubscribe();
-      }
-      for (const engine of configRef.current.engines) {
-        void engine.stop();
-      }
+      policyEngine?.cancelPendingKills();
+      for (const sub of subscriptions) sub.unsubscribe();
+      for (const engine of configRef.current.engines) void engine.stop();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-}
-
-function handleThreat(event: ThreatEvent, config: GuardianConfig): void {
-  const handler = config.actions[event.threatId];
-  if (handler) {
-    handler(event);
-  }
-
-  config.telemetry?.recordThreat(event);
 }
 
 function generateSessionId(): string {
