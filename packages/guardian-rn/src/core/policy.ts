@@ -2,6 +2,8 @@ import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { ResponsePolicy } from '../generated/ResponsePolicy.js';
 import type { ThreatId } from '../generated/ThreatId.js';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
+import type { SignPayload } from '../telemetry/TelemetryAdapter.js';
+import { OODAController } from './ooda.js';
 
 export const DEFAULT_POLICIES: Partial<Record<ThreatId, ResponsePolicy>> = {
   root: 'lockout',
@@ -26,6 +28,8 @@ export const DEFAULT_POLICIES: Partial<Record<ThreatId, ResponsePolicy>> = {
   biometricMissing: 'telemetry',
   hardwareBackedKeysMissing: 'restrict',
   engineFault: 'telemetry',
+  sessionExpiry: 'lockout',
+  behavioralAnomaly: 'restrict',
 };
 
 export const DEFAULT_CONFIDENCE_THRESHOLDS = {
@@ -36,20 +40,26 @@ export const DEFAULT_CONFIDENCE_THRESHOLDS = {
 
 export class PolicyEngine {
   private readonly config: GuardianConfig;
+  private readonly signPayload: SignPayload;
+  private readonly ooda: OODAController | null;
   private killTimers = new Map<ThreatId, ReturnType<typeof setTimeout>>();
 
-  constructor(config: GuardianConfig) {
+  constructor(config: GuardianConfig, signPayload: SignPayload) {
     this.config = config;
+    this.signPayload = signPayload;
+    this.ooda = config.adaptiveThresholds
+      ? new OODAController(config.adaptiveThresholds, config.confidenceThresholds)
+      : null;
   }
 
   apply(event: ThreatEvent): void {
     const policy = this.resolvePolicy(event.threatId);
-    const thresholds = {
-      ...DEFAULT_CONFIDENCE_THRESHOLDS,
-      ...this.config.confidenceThresholds,
-    };
+    // OODA loop: record the event and get adaptive thresholds
+    const thresholds = this.ooda
+      ? this.ooda.observe(event.ts)
+      : { ...DEFAULT_CONFIDENCE_THRESHOLDS, ...this.config.confidenceThresholds };
 
-    this.config.telemetry?.recordThreat(event);
+    this.config.telemetry?.recordThreat(event, this.signPayload);
 
     if (policy === 'telemetry') return;
 

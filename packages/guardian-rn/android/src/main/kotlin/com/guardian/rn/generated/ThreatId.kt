@@ -26,4 +26,6 @@ sealed class ThreatId {
     data object BiometricMissing : ThreatId()
     data object HardwareBackedKeysMissing : ThreatId()
     data object EngineFault : ThreatId()
+    data object SessionExpiry : ThreatId()
+    data object BehavioralAnomaly : ThreatId()
 }

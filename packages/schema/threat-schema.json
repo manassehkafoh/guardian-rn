@@ -28,7 +28,9 @@
         "passcodeMissing",
         "biometricMissing",
         "hardwareBackedKeysMissing",
-        "engineFault"
+        "engineFault",
+        "sessionExpiry",
+        "behavioralAnomaly"
       ],
       "description": "All threat identifiers. Any addition requires a codegen run."
     },

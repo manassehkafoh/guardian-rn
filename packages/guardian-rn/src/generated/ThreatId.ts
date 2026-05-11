@@ -23,4 +23,6 @@ export type ThreatId =
   | 'passcodeMissing'
   | 'biometricMissing'
   | 'hardwareBackedKeysMissing'
-  | 'engineFault';
+  | 'engineFault'
+  | 'sessionExpiry'
+  | 'behavioralAnomaly';

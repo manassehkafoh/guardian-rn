@@ -24,4 +24,6 @@ public enum ThreatId: String, CaseIterable, Codable {
     case biometricMissing
     case hardwareBackedKeysMissing
     case engineFault
+    case sessionExpiry
+    case behavioralAnomaly
 }

@@ -3,15 +3,12 @@ import { SequenceTracker } from '../core/SequenceTracker.js';
 import type { GuardianEnvelope } from '../core/HmacEnvelope.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { Engine, EngineHealthTick } from '../engine/Engine.js';
-
-export interface BusConfig {
-  dedupWindowMs: number;
-  rateCapPerSecond: number;
-}
+import type { BusConfig } from '../config/GuardianConfig.js';
 
 const DEFAULT_BUS_CONFIG: BusConfig = {
   dedupWindowMs: 100,
   rateCapPerSecond: 50,
+  fastPathEnabled: true,
 };
 
 export type ThreatHandler = (event: ThreatEvent) => void;
@@ -26,6 +23,8 @@ export class EventBus {
   private readonly config: BusConfig;
   private readonly sessionKey: Uint8Array;
   private readonly tracker: SequenceTracker;
+  /** Kill threshold — events at or above bypass dedup/rate-cap when fastPathEnabled. */
+  private readonly killThreshold: number;
 
   private threatHandlers = new Set<ThreatHandler>();
   private healthHandlers = new Set<HealthHandler>();
@@ -38,10 +37,16 @@ export class EventBus {
 
   private droppedCount = 0;
 
-  constructor(sessionKey: Uint8Array, sessionId: string, config?: Partial<BusConfig>) {
+  constructor(
+    sessionKey: Uint8Array,
+    sessionId: string,
+    config?: Partial<BusConfig>,
+    killThreshold = 0.9,
+  ) {
     this.sessionKey = sessionKey;
     this.tracker = new SequenceTracker(sessionId);
     this.config = { ...DEFAULT_BUS_CONFIG, ...config };
+    this.killThreshold = killThreshold;
   }
 
   /** Attach an engine: subscribes to its onThreat and onHealthTick streams. */
@@ -105,6 +110,12 @@ export class EventBus {
   // ── private routing ──────────────────────────────────────────────────────
 
   private routeThreat(event: ThreatEvent, engineId: string): void {
+    // Fast-path: critical events bypass dedup and rate-cap entirely
+    if (this.config.fastPathEnabled && event.confidence >= this.killThreshold) {
+      this.threatHandlers.forEach((h) => h(event));
+      return;
+    }
+
     if (this.isRateCapped(engineId)) {
       this.droppedCount++;
       return;

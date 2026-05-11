@@ -3,6 +3,8 @@ import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { TerminatorPort } from '../policy/TerminatorPort.js';
 
+const NOOP_SIGN = (data: string) => `sha256=${'0'.repeat(64)}`;
+
 function makeEvent(overrides: Partial<ThreatEvent> = {}): ThreatEvent {
   return {
     threatId: 'root',
@@ -35,7 +37,7 @@ describe('PolicyEngine', () => {
   test('telemetry-only threats do not invoke action callbacks', () => {
     const onRestrict = jest.fn();
     const config = makeConfig({ actions: { onRestrict } });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'emulator', confidence: 0.99 }));
     expect(onRestrict).not.toHaveBeenCalled();
   });
@@ -45,7 +47,7 @@ describe('PolicyEngine', () => {
     const config = makeConfig({
       telemetry: { recordThreat, recordHealthTick: jest.fn(), flush: jest.fn().mockResolvedValue(undefined) },
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'root', confidence: 0.95 }));
     expect(recordThreat).toHaveBeenCalledTimes(1);
   });
@@ -56,7 +58,7 @@ describe('PolicyEngine', () => {
       policies: { debugger: 'restrict' },
       actions: { onRestrict },
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'debugger', confidence: 0.8 }));
     expect(onRestrict).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +69,7 @@ describe('PolicyEngine', () => {
       policies: { debugger: 'restrict' },
       actions: { onRestrict },
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'debugger', confidence: 0.3 }));
     expect(onRestrict).not.toHaveBeenCalled();
   });
@@ -75,7 +77,7 @@ describe('PolicyEngine', () => {
   test('lockout policy invokes onLockout when confidence >= 0.7', () => {
     const onLockout = jest.fn();
     const config = makeConfig({ actions: { onLockout } });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'root', confidence: 0.9 }));
     expect(onLockout).toHaveBeenCalledTimes(1);
   });
@@ -90,7 +92,7 @@ describe('PolicyEngine', () => {
       terminator,
       actions: { onKill },
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'hooks', confidence: 0.99 }));
     expect(onKill).toHaveBeenCalledTimes(1);
     expect(terminate).not.toHaveBeenCalled();
@@ -108,7 +110,7 @@ describe('PolicyEngine', () => {
       terminator: { terminate },
       actions: {},
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'hooks', confidence: 0.99 }));
     engine.cancelPendingKills();
     jest.advanceTimersByTime(1000);
@@ -124,7 +126,7 @@ describe('PolicyEngine', () => {
       terminator: { terminate },
       actions: {},
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     engine.apply(makeEvent({ threatId: 'hooks', confidence: 0.99 }));
     engine.apply(makeEvent({ threatId: 'hooks', confidence: 0.99 })); // duplicate
     jest.advanceTimersByTime(600);
@@ -139,7 +141,7 @@ describe('PolicyEngine', () => {
       confidenceThresholds: { restrict: 0.9 },
       actions: { onRestrict },
     });
-    const engine = new PolicyEngine(config);
+    const engine = new PolicyEngine(config, NOOP_SIGN);
     // confidence 0.8 is < custom threshold 0.9
     engine.apply(makeEvent({ threatId: 'debugger', confidence: 0.8 }));
     expect(onRestrict).not.toHaveBeenCalled();

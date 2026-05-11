@@ -9,6 +9,7 @@ function makeContext(overrides: Partial<EngineContext> = {}): EngineContext {
     config: {} as never,
     sessionId: 'test-session',
     platform: 'android',
+    managedProfile: false,
     onFault: jest.fn(),
     ...overrides,
   };

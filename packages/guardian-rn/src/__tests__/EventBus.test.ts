@@ -59,25 +59,28 @@ describe('EventBus', () => {
   });
 
   test('dedup window suppresses same threatId within 100ms', () => {
-    const bus = new EventBus(SESSION_KEY, SESSION_ID, { dedupWindowMs: 100, rateCapPerSecond: 50 });
+    // Use confidence < kill threshold (0.9) so fast-path does not bypass dedup
+    const lowConf = { ...BASE_PAYLOAD, confidence: 0.6 };
+    const bus = new EventBus(SESSION_KEY, SESSION_ID, { dedupWindowMs: 100, rateCapPerSecond: 50, fastPathEnabled: true });
     const received: string[] = [];
     bus.onThreat((e) => received.push(e.threatId));
 
-    bus.processEnvelope(makeEnvelope(1, BASE_PAYLOAD), 'engine');
-    bus.processEnvelope(makeEnvelope(2, BASE_PAYLOAD), 'engine'); // same threatId, within window
+    bus.processEnvelope(makeEnvelope(1, lowConf), 'engine');
+    bus.processEnvelope(makeEnvelope(2, lowConf), 'engine'); // same threatId, within window
 
     expect(received).toHaveLength(1);
   });
 
   test('rate cap drops events exceeding limit', () => {
-    const bus = new EventBus(SESSION_KEY, SESSION_ID, { dedupWindowMs: 0, rateCapPerSecond: 3 });
+    // Use confidence < kill threshold (0.9) so fast-path does not bypass rate-cap
+    const bus = new EventBus(SESSION_KEY, SESSION_ID, { dedupWindowMs: 0, rateCapPerSecond: 3, fastPathEnabled: true });
     const received: string[] = [];
     bus.onThreat((e) => received.push(e.threatId));
 
     // Send 5 events from same engine with different threatIds to bypass dedup
     const threats = ['root', 'jailbreak', 'debugger', 'hooks', 'tamper'] as const;
     threats.forEach((threatId, i) => {
-      const p = { ...BASE_PAYLOAD, threatId };
+      const p = { ...BASE_PAYLOAD, threatId, confidence: 0.6 };
       bus.processEnvelope(makeEnvelope(i + 1, p), 'engine');
     });
 
@@ -107,5 +110,40 @@ describe('EventBus', () => {
     bus.processEnvelope(makeEnvelope(2, { ...BASE_PAYLOAD, threatId: 'root' }), 'engine');
 
     expect(received).toEqual(['hooks']); // only the first event
+  });
+
+  test('fast-path: confidence >= kill threshold bypasses dedup and rate-cap', () => {
+    // rate cap of 1/s and 200ms dedup — but fast-path events go through regardless
+    const bus = new EventBus(
+      SESSION_KEY,
+      SESSION_ID,
+      { dedupWindowMs: 200, rateCapPerSecond: 1, fastPathEnabled: true },
+      0.9,
+    );
+    const received: string[] = [];
+    bus.onThreat((e) => received.push(e.threatId));
+
+    // Three identical high-confidence events — all should be forwarded
+    bus.processEnvelope(makeEnvelope(1, BASE_PAYLOAD), 'engine'); // confidence 0.95
+    bus.processEnvelope(makeEnvelope(2, BASE_PAYLOAD), 'engine');
+    bus.processEnvelope(makeEnvelope(3, BASE_PAYLOAD), 'engine');
+
+    expect(received).toHaveLength(3);
+  });
+
+  test('fast-path disabled: confidence >= kill threshold still goes through normal pipeline', () => {
+    const bus = new EventBus(
+      SESSION_KEY,
+      SESSION_ID,
+      { dedupWindowMs: 200, rateCapPerSecond: 50, fastPathEnabled: false },
+      0.9,
+    );
+    const received: string[] = [];
+    bus.onThreat((e) => received.push(e.threatId));
+
+    bus.processEnvelope(makeEnvelope(1, BASE_PAYLOAD), 'engine');
+    bus.processEnvelope(makeEnvelope(2, BASE_PAYLOAD), 'engine'); // deduplicated
+
+    expect(received).toHaveLength(1);
   });
 });
