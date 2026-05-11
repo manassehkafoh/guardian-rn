@@ -69,7 +69,7 @@ jobs:
           fi
 
       - name: Build
-        run: npm run build --workspace=packages/guardian-rn
+        run: npm run build
 
       - name: Publish to npm (with provenance)
         run: |
