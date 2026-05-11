@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
-import type { EngineContext } from '../engine/Engine.js';
+import type { EngineContext, EngineHealthTick } from '../engine/Engine.js';
 import { PolicyEngine } from '../core/policy.js';
 
 /**
@@ -42,7 +42,7 @@ export function useGuardian(config: GuardianConfig): void {
           subscriptions.push(threatSub);
 
           const healthSub = engine.onHealthTick.subscribe({
-            next: (tick) => configRef.current.telemetry?.recordHealthTick(tick),
+            next: (tick: EngineHealthTick) => configRef.current.telemetry?.recordHealthTick(tick),
           });
           subscriptions.push(healthSub);
         } catch (err) {
