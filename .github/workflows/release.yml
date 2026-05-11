@@ -6,7 +6,7 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
-  contents: read
+  contents: write  # Required for GitHub Release creation
   id-token: write  # Required for npm provenance attestation
 
 jobs:
@@ -58,11 +58,15 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Bump package version
+      - name: Bump package version (if not already set)
         run: |
-          npm version "${{ steps.version.outputs.VERSION }}" \
-            --workspace=packages/guardian-rn \
-            --no-git-tag-version
+          CURRENT=$(node -p "require('./packages/guardian-rn/package.json').version")
+          TARGET="${{ steps.version.outputs.VERSION }}"
+          if [ "$CURRENT" != "$TARGET" ]; then
+            npm version "$TARGET" --workspace=packages/guardian-rn --no-git-tag-version
+          else
+            echo "Version already set to $TARGET — skipping bump"
+          fi
 
       - name: Build
         run: npm run build --workspace=packages/guardian-rn
