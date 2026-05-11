@@ -77,3 +77,21 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run lint || true   # non-blocking until lint config is finalised in Phase 2
+
+  fuzz-extended:
+    name: Extended fuzz (main branch only)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run codegen
+      - name: Run extended fuzz (100 000 iterations per suite)
+        run: npm test -- --testPathPattern=fuzz
+        env:
+          FUZZ_ITERATIONS: "100000"
