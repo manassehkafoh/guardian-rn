@@ -26,7 +26,7 @@ export function useThreatHandler(handlers: ThreatHandlerMap): void {
     }
 
     return () => unsubFns.forEach((fn) => fn());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line -- handler keys are intentionally stable after mount
   }, []);
 }
 

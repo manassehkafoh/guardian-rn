@@ -58,7 +58,7 @@ export function useGuardian(config: GuardianConfig): void {
       for (const sub of subscriptions) sub.unsubscribe();
       for (const engine of configRef.current.engines) void engine.stop();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line -- engines array identity is intentionally stable
   }, []);
 }
 
