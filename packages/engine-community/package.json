@@ -1,0 +1,16 @@
+{
+  "name": "@guardian-rn/engine-community",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source community detection engine for guardian-rn",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.4.0"
+  }
+}

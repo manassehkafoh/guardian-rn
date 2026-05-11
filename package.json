@@ -38,6 +38,7 @@
     ],
     "moduleNameMapper": {
       "^@noble/hashes/(.*)$": "<rootDir>/node_modules/@noble/hashes/$1.js",
+      "^@guardian/rn/(.*)$": "<rootDir>/packages/guardian-rn/$1",
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transform": {
