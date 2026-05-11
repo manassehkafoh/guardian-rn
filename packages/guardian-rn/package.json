@@ -11,7 +11,13 @@
     "react-native.config.js",
     "*.podspec"
   ],
-  "keywords": ["react-native", "security", "rasp", "mobile", "runtime-protection"],
+  "keywords": [
+    "react-native",
+    "security",
+    "rasp",
+    "mobile",
+    "runtime-protection"
+  ],
   "license": "MIT",
   "peerDependencies": {
     "react": ">=18.0.0",

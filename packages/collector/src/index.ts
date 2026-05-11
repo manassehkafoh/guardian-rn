@@ -28,9 +28,7 @@ app.post('/session', async (request, reply) => {
 
 const PORT = parseInt(process.env.PORT ?? '4200', 10);
 
-app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+app.listen({ port: PORT, host: '0.0.0.0' }).catch((err: unknown) => {
+  app.log.error(err);
+  process.exit(1);
 });
