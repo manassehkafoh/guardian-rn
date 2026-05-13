@@ -19,19 +19,19 @@ class GuardianRNModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun start(config: ReadableMap, promise: Promise) {
-        // TODO Phase 2: initialise engine, session key, HMAC envelope
+        // TODO(GUARD-2001) Phase 2: initialise engine, session key, HMAC envelope
         promise.resolve(null)
     }
 
     @ReactMethod
     fun stop(promise: Promise) {
-        // TODO Phase 2: stop engine, flush telemetry
+        // TODO(GUARD-2001) Phase 2: stop engine, flush telemetry
         promise.resolve(null)
     }
 
     @ReactMethod
     fun getSessionKey(promise: Promise) {
-        // TODO Phase 2: deliver session key via JSI HostObject (ADR-0003)
+        // TODO(GUARD-2001) Phase 2: deliver session key via JSI HostObject (ADR-0003)
         // getSessionKey() may be called only once per process lifetime.
         promise.reject("NOT_IMPLEMENTED", "JSI HostObject not yet wired — Phase 2")
     }

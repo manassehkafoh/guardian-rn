@@ -78,6 +78,7 @@ describe('Scan-time performance benchmark', () => {
 
     console.log(`[benchmark] scan p50=${median.toFixed(1)}ms p95=${p95.toFixed(1)}ms`);
     expect(p95).toBeLessThan(P95_BUDGET_MS);
+    expect(median).toBeLessThan(MEDIAN_BUDGET_MS);
   }, 30_000);
 
   test('parallel detector fan-out: slowest detector bounds total time', async () => {
