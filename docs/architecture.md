@@ -75,13 +75,13 @@
 
 ### 2. Security Lifecycle Mapping
 
-The book (Chapter 1, §1.2) defines a three-phase mobile security lifecycle: **Prevention → Monitoring → Reaction / Mitigation**. Guardian-RN maps directly onto this model.
+We define a three-phase mobile security lifecycle: **Prevention → Monitoring → Reaction / Mitigation**. Guardian-RN maps directly onto this model.
 
 #### 2.1 Prevention
 
 Prevention limits attack surface before any hostile event occurs.
 
-| Book concept | Guardian-RN implementation |
+| Concept | Guardian-RN implementation |
 |---|---|
 | OS sandboxing / process isolation | SDK runs inside the RN process; no cross-process surface is exposed |
 | TEE-backed key storage | `AndroidKeyStore` hardware-backed AES-256-GCM key; iOS `SecRandomCopyBytes` in Secure Enclave–eligible keychain |
@@ -94,7 +94,7 @@ Prevention limits attack surface before any hostile event occurs.
 
 Monitoring is the continuous detection pipeline that runs during app execution.
 
-| Book concept | Guardian-RN implementation |
+| Concept | Guardian-RN implementation |
 |---|---|
 | Runtime integrity checks | CommunityEngine scans all 6 detectors every cycle via `Promise.allSettled`; faults are surfaced through `onFault` without crashing the scan loop |
 | Continuous health telemetry | Every engine must emit `onHealthTick` at ≤60 s intervals; silence is observable. `useGuardian` forwards ticks to `config.telemetry.recordHealthTick` |
@@ -106,7 +106,7 @@ Monitoring is the continuous detection pipeline that runs during app execution.
 
 When a threat exceeds the kill threshold, the SDK must respond without creating denial-of-service risk against honest users.
 
-| Book concept | Guardian-RN implementation |
+| Concept | Guardian-RN implementation |
 |---|---|
 | Graduated response | Three tiers: restrict (degrade UX, 0.5 threshold) → lockout (block session, 0.7) → kill (terminate process, 0.9). Host app owns the response implementation |
 | Grace-period kill | `killPolicy.graceMs` delays process termination to allow UX messaging; `cancelPendingKills()` ensures cleanup on unmount so tests and CI aren't killed |
@@ -118,7 +118,7 @@ When a threat exceeds the kill threshold, the SDK must respond without creating 
 
 ### 3. Threat Taxonomy Coverage
 
-The book (Chapter 1, §1.1) classifies mobile threats across seven attack vectors. The table below maps each to current and planned guardian-rn coverage.
+We classify mobile threats across seven attack vectors. The table below maps each to current and planned guardian-rn coverage.
 
 | Book threat vector | Specific attack | Covered by | Status |
 |---|---|---|---|
@@ -306,7 +306,7 @@ export function App() {
 
 ### 9. MDAM / Enterprise Integration
 
-The book (Chapter 1, §1.4) defines a Mobile Device and App Management (MDAM) framework as the enterprise control plane sitting above individual app security. Guardian-RN is designed to be a MDAM-aware sensor.
+We define a Mobile Device and App Management (MDAM) framework as the enterprise control plane sitting above individual app security. Guardian-RN is designed to be a MDAM-aware sensor.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -356,7 +356,7 @@ The book's MDAM framework (§1.4.3) distinguishes four BYOD schemes. Guardian-RN
 
 ### 10. Trusted Execution Environment (TEE) Integration
 
-The book (Chapter 1, §1.3.3) identifies the TEE as the hardware root-of-trust for key material and sensitive computations. Guardian-RN integrates with platform TEEs at two points.
+We identify the TEE as the hardware root-of-trust for key material and sensitive computations. Guardian-RN integrates with platform TEEs at two points.
 
 ```
 ┌─────────────────────┐      ┌──────────────────────────────────────┐
@@ -521,7 +521,7 @@ The HMAC envelope on internal events ensures that a threat event cannot be injec
 
 ## Appendix A — Design Decisions vs. Book Frameworks
 
-| Book framework | Guardian-RN design decision | Rationale |
+| The framework | Guardian-RN design decision | Rationale |
 |---|---|---|
 | Security lifecycle (prevention → monitoring → reaction) | Three-phase architecture: native prevention layer, engine scan loop, policy response | Matches the book's model directly; each phase is independently replaceable |
 | TEE / TrustZone as root of trust | AndroidKeyStore hardware-backed key; iOS Secure Enclave via Keychain | Cryptographic root-of-trust cannot be extracted even on a rooted device with an unlocked bootloader |
