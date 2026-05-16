@@ -19,13 +19,15 @@ object HmacSigner {
     fun verify(canonicalPayload: String, keyBytes: ByteArray, expectedHmac: String): Boolean {
         val computed = sign(canonicalPayload, keyBytes)
         // Constant-time comparison to prevent timing attacks
-        return constantTimeEquals(computed, expectedHmac)
+        return constantTimeEquals(expectedHmac, computed)
     }
 
-    private fun constantTimeEquals(a: String, b: String): Boolean {
-        if (a.length != b.length) return false
-        var diff = 0
-        for (i in a.indices) diff = diff or (a[i].code xor b[i].code)
+    private fun constantTimeEquals(untrusted: String, trusted: String): Boolean {
+        var diff = untrusted.length xor trusted.length
+        for (i in trusted.indices) {
+            val untrustedChar = if (i < untrusted.length) untrusted[i].code else 0
+            diff = diff or (untrustedChar xor trusted[i].code)
+        }
         return diff == 0
     }
 }

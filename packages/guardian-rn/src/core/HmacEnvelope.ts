@@ -43,11 +43,10 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
   return 'sha256=' + mac.digest('hex');
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+function constantTimeEqual(untrusted: string, trusted: string): boolean {
+  let diff = untrusted.length ^ trusted.length;
+  for (let i = 0; i < trusted.length; i++) {
+    diff |= (untrusted.charCodeAt(i) | 0) ^ (trusted.charCodeAt(i) | 0);
   }
   return diff === 0;
 }
