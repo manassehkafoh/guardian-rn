@@ -1,0 +1,4 @@
+## 2024-05-24 - Fix Early Return in Constant-Time HMAC Comparison
+**Vulnerability:** The constant-time comparison functions for HMAC verification in TypeScript, Kotlin, and Swift returned early if the lengths of the computed and expected strings didn't match. This early return exposed a timing vulnerability because an attacker could incrementally guess the length of the expected HMAC hash by observing the time taken to return `false`.
+**Learning:** Even if a comparison loop takes constant time, any length check before the loop that returns early destroys the constant-time property of the entire function.
+**Prevention:** To maintain constant-time comparison, always compare lengths using a bitwise XOR and perform the loop up to the length of one of the strings (e.g. the expected string), padding or substituting zero for out-of-bounds indices, and return whether both the differences and the length XOR are zero.
