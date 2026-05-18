@@ -44,10 +44,17 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  const aLen = a.length | 0;
+  const bLen = b.length | 0;
+  const maxLength = Math.max(aLen, bLen) | 0;
+
+  for (let i = 0; i < maxLength; i++) {
+    const charA = (i < aLen ? a.charCodeAt(i) : 0) | 0;
+    const charB = (i < bLen ? b.charCodeAt(i) : 0) | 0;
+    diff |= charA ^ charB;
   }
+
+  diff |= aLen ^ bLen;
   return diff === 0;
 }
