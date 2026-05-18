@@ -1,0 +1,4 @@
+## 2024-05-18 - [Timing Attack Vulnerability in HMAC Validation]
+**Vulnerability:** The `constantTimeEqual` function in `HmacEnvelope.ts` implemented an early return on string length mismatch (`if (a.length !== b.length) return false;`), which leaks the expected HMAC length via a timing side-channel.
+**Learning:** Even when the character-by-character comparison is constant time, checking the length first and returning early can still expose sensitive length information to an attacker, which could be used to optimize brute-force or timing attacks.
+**Prevention:** HMAC and other sensitive equality checks must loop based on the maximum length of both strings (or the length of the trusted string), padding out-of-bounds characters with zero, and avoiding early returns on length mismatch.
