@@ -22,10 +22,15 @@ object HmacSigner {
         return constantTimeEquals(computed, expectedHmac)
     }
 
+    // Security: Constant-time string comparison to prevent timing attacks and CPU exhaustion DoS.
+    // We strictly iterate based on the length of the trusted (locally computed) string `a`.
+    // Untrusted string `b` is padded with zeros for out-of-bounds indices.
     private fun constantTimeEquals(a: String, b: String): Boolean {
-        if (a.length != b.length) return false
-        var diff = 0
-        for (i in a.indices) diff = diff or (a[i].code xor b[i].code)
+        var diff = a.length xor b.length
+        for (i in a.indices) {
+            val charB = if (i < b.length) b[i].code else 0
+            diff = diff or (a[i].code xor charB)
+        }
         return diff == 0
     }
 }
