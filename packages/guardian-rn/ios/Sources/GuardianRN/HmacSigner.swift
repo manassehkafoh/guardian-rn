@@ -17,11 +17,23 @@ enum HmacSigner {
     }
 
     /// Constant-time comparison to prevent timing side-channels.
+    /// Security: Strictly iterate based on the length of the trusted (locally computed) string `computed`.
+    /// Untrusted string `expected` is padded with zeros for out-of-bounds indices.
     static func verify(canonicalPayload: String, keyBytes: [UInt8], expected: String) -> Bool {
         let computed = sign(canonicalPayload: canonicalPayload, keyBytes: keyBytes)
-        guard computed.count == expected.count else { return false }
+        var expectedIter = expected.utf8.makeIterator()
         var diff: UInt8 = 0
-        for (a, b) in zip(computed.utf8, expected.utf8) { diff |= a ^ b }
+
+        for a in computed.utf8 {
+            let b = expectedIter.next() ?? 0
+            diff |= a ^ b
+        }
+
+        // Ensure expected length matches exactly
+        if expectedIter.next() != nil || computed.count != expected.count {
+            diff |= 1
+        }
+
         return diff == 0
     }
 }

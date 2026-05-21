@@ -43,11 +43,14 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
   return 'sha256=' + mac.digest('hex');
 }
 
+// Security: Constant-time string comparison to prevent timing attacks and CPU exhaustion DoS.
+// We strictly iterate based on the length of the trusted (locally computed) string `b`.
+// Untrusted string `a` is padded with zeros for out-of-bounds indices.
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  let diff = (a.length ^ b.length) | 0;
+  for (let i = 0; i < b.length; i++) {
+    const charA = i < a.length ? a.charCodeAt(i) : 0;
+    diff |= (charA ^ b.charCodeAt(i)) | 0;
   }
   return diff === 0;
 }
