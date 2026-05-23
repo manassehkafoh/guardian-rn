@@ -43,11 +43,15 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
   return 'sha256=' + mac.digest('hex');
 }
 
+// Security Concern: Early return on length mismatch or iterating over untrusted input length
+// creates a CPU exhaustion / Denial of Service (DoS) vulnerability.
+// This function avoids early returns, strictly iterates based on the trusted length `b.length`,
+// pads out-of-bound untrusted input with zeroes, and enforces a constant time comparison.
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) {
+    const charA = i < a.length ? a.charCodeAt(i) : 0;
+    diff |= (charA ^ b.charCodeAt(i)) | 0;
   }
   return diff === 0;
 }
