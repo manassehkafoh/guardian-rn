@@ -1,0 +1,4 @@
+## 2026-05-27 - Fix HMAC Constant-Time Timing and DoS Vulnerability
+**Vulnerability:** The `constantTimeEqual` implementations in TypeScript, Kotlin, and Swift returned early on length mismatch (timing attack). Even worse, the loop iteration length used was vulnerable to DoS. Iterating over the untrusted string length allowed an attacker to send an artificially massive payload (e.g. 100MB string) that would exhaust CPU cycles and lock up the execution thread.
+**Learning:** HMAC verification must always iterate based on the length of the *locally computed* (trusted) signature, padding out-of-bounds indices of the untrusted signature. Early returns break constant-time guarantees, and iterating on the untrusted string's length is a DoS vector.
+**Prevention:** In JS/TS, use bitwise OR (`| 0`) for 32-bit integer coercion. In Swift, use `expected.utf8.makeIterator()` and bitwise operators on `Int`. Ensure the untrusted input length does not control the iteration count.
