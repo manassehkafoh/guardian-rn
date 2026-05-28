@@ -1,4 +1,5 @@
-import { fromTalsecConfig, type TalsecConfig } from '../compat/freerasp-rn.js';
+import * as compat from '../compat/freerasp-rn.js';
+import { type TalsecConfig } from '../compat/freerasp-rn.js';
 
 function makeTalsecConfig(overrides: Partial<TalsecConfig> = {}): TalsecConfig {
   return {
@@ -18,26 +19,26 @@ function makeTalsecConfig(overrides: Partial<TalsecConfig> = {}): TalsecConfig {
 
 describe('fromTalsecConfig', () => {
   test('returns a valid GuardianConfig', () => {
-    const config = fromTalsecConfig(makeTalsecConfig(), []);
+    const config = compat.fromTalsecConfig(makeTalsecConfig(), []);
     expect(config.tenantId).toBe('migrated');
     expect(config.engines).toHaveLength(0);
     expect(config.actions).toBeDefined();
   });
 
   test('isProd=false downgrades default threat policies to telemetry', () => {
-    const config = fromTalsecConfig(makeTalsecConfig({ isProd: false }), []);
+    const config = compat.fromTalsecConfig(makeTalsecConfig({ isProd: false }), []);
     expect(config.policies?.['root']).toBe('telemetry');
     expect(config.policies?.['hooks']).toBe('telemetry');
   });
 
   test('isProd=true leaves policies empty (PolicyEngine defaults apply)', () => {
-    const config = fromTalsecConfig(makeTalsecConfig({ isProd: true }), []);
+    const config = compat.fromTalsecConfig(makeTalsecConfig({ isProd: true }), []);
     expect(config.policies?.['root']).toBeUndefined();
   });
 
   test('listeners are wired into actions', () => {
     const privilegedAccess = jest.fn();
-    const config = fromTalsecConfig(
+    const config = compat.fromTalsecConfig(
       makeTalsecConfig({ listeners: { privilegedAccess } }),
       [],
     );
@@ -54,7 +55,7 @@ describe('fromTalsecConfig', () => {
   });
 
   test('custom tenantId is passed through', () => {
-    const config = fromTalsecConfig(makeTalsecConfig(), [], 'acme-corp');
+    const config = compat.fromTalsecConfig(makeTalsecConfig(), [], 'acme-corp');
     expect(config.tenantId).toBe('acme-corp');
   });
 });
