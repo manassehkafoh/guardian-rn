@@ -3,7 +3,7 @@ import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { TerminatorPort } from '../policy/TerminatorPort.js';
 
-const NOOP_SIGN = (data: string) => `sha256=${'0'.repeat(64)}`;
+const NOOP_SIGN = (_data: string) => `sha256=${'0'.repeat(64)}`;
 
 function makeEvent(overrides: Partial<ThreatEvent> = {}): ThreatEvent {
   return {
