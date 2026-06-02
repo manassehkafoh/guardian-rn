@@ -43,11 +43,13 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
   return 'sha256=' + mac.digest('hex');
 }
 
+// Security note: a is untrusted (from envelope), b is trusted (computed HMAC)
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  let diff = a.length ^ b.length;
+  // Strictly iterate over the trusted length to prevent DoS via massive untrusted strings.
+  for (let i = 0; i < b.length; i++) {
+    // Pad out-of-bounds characters with 0 to prevent NaN propagation
+    diff |= (a.charCodeAt(i) | 0) ^ b.charCodeAt(i);
   }
   return diff === 0;
 }
