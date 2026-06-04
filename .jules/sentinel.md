@@ -1,0 +1,4 @@
+## 2024-05-18 - [CRITICAL] Early return in HMAC constant-time comparison
+**Vulnerability:** Timing Side-Channel in constant-time string comparison (used in HMAC verification).
+**Learning:** Early returns based on length mismatch in constant-time comparison methods (`constantTimeEqual`) completely defeat the purpose, leaking string length information via timing differences and opening a vector for timing attacks. Furthermore, iterating over untrusted inputs in TS/Kotlin/Swift led to potential Denial of Service (DoS) due to unbounded resource consumption.
+**Prevention:** Strictly iterate over the length of the *trusted*, locally computed string to prevent CPU exhaustion DoS, padding the untrusted array out-of-bounds indices with `0`. Avoid all conditional branching (`if`/`guard`) related to input length inside the constant-time operation.
