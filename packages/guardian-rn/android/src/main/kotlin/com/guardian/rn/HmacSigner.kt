@@ -23,9 +23,11 @@ object HmacSigner {
     }
 
     private fun constantTimeEquals(a: String, b: String): Boolean {
-        if (a.length != b.length) return false
-        var diff = 0
-        for (i in a.indices) diff = diff or (a[i].code xor b[i].code)
+        var diff = a.length xor b.length
+        for (i in a.indices) {
+            val untrustedCode = if (i < b.length) b[i].code else 0
+            diff = diff or (a[i].code xor untrustedCode)
+        }
         return diff == 0
     }
 }

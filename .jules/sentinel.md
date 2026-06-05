@@ -1,0 +1,4 @@
+## 2024-05-18 - Fix Constant-Time HMAC Comparison Vulnerability
+**Vulnerability:** Constant-time string comparisons used an early return `if (a.length !== b.length) return false;` or iterated over the untrusted length, allowing for timing attacks and potentially CPU exhaustion (DoS) when providing a massively long fake HMAC.
+**Learning:** Even when avoiding string equality operators, comparing lengths first or iterating bounds based on untrusted input leaks information and introduces DOS risk on the validation function loop.
+**Prevention:** Remove length checks that early return. XOR the lengths together into the initial `diff` mask. Use the length of the *trusted* (locally computed) string as the loop bound. For indices out of bounds of the untrusted string, explicitly pad with zero to prevent crashes or `undefined` evaluation and maintain loop timing.
