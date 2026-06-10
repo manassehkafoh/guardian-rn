@@ -31,7 +31,8 @@ export function verifyEnvelope(
 ): { ok: true; payload: ThreatPayload } | { ok: false; reason: 'HMAC_MISMATCH' } {
   const canonical = canonicalJson(envelope.payload);
   const expected = computeHmac(canonical, key);
-  if (!constantTimeEqual(envelope.hmac, expected)) {
+  // expected is trusted (computed locally), envelope.hmac is untrusted
+  if (!constantTimeEqual(expected, envelope.hmac)) {
     return { ok: false, reason: 'HMAC_MISMATCH' };
   }
   return { ok: true, payload: envelope.payload };
@@ -43,11 +44,10 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
   return 'sha256=' + mac.digest('hex');
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+function constantTimeEqual(trusted: string, untrusted: string): boolean {
+  let diff = trusted.length ^ untrusted.length;
+  for (let i = 0; i < trusted.length; i++) {
+    diff |= trusted.charCodeAt(i) ^ (untrusted.charCodeAt(i) | 0);
   }
   return diff === 0;
 }
