@@ -44,10 +44,13 @@ export function computeHmac(canonicalPayload: string, key: Uint8Array): string {
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  // b is the expected/trusted string. We must iterate over b.length to avoid CPU
+  // exhaustion/DoS if a is maliciously long. Use | 0 for 32-bit integer coercion.
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) {
+    const charA = (i < a.length ? a.charCodeAt(i) : 0) | 0;
+    const charB = b.charCodeAt(i) | 0;
+    diff |= charA ^ charB;
   }
   return diff === 0;
 }
