@@ -1,0 +1,4 @@
+## 2024-06-15 - Constant-Time Equality DoS and Timing Vulnerability
+**Vulnerability:** Constant-time equality checks for HMAC signatures were iterating based on the length of the unverified (untrusted) input rather than the expected (trusted) input length, or they included early returns on length mismatch.
+**Learning:** Iterating based on the untrusted input length allows an attacker to cause a Denial of Service (CPU exhaustion) by sending a massive payload length. Early returns on length mismatch re-introduce timing attacks, defeating the purpose of constant-time equality.
+**Prevention:** Always iterate strictly based on the length of the locally computed (trusted) value. Pad any out-of-bounds access for the untrusted string with zeros, and use bitwise operations (like `| 0` in TS, `.code xor` in Kotlin, and `Int` accumulation in Swift) to accumulate differences without early returns.

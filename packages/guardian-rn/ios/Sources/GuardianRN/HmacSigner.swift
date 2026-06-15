@@ -19,9 +19,21 @@ enum HmacSigner {
     /// Constant-time comparison to prevent timing side-channels.
     static func verify(canonicalPayload: String, keyBytes: [UInt8], expected: String) -> Bool {
         let computed = sign(canonicalPayload: canonicalPayload, keyBytes: keyBytes)
-        guard computed.count == expected.count else { return false }
-        var diff: UInt8 = 0
-        for (a, b) in zip(computed.utf8, expected.utf8) { diff |= a ^ b }
+
+        var diff: Int = 0
+        var expectedIterator = expected.utf8.makeIterator()
+        var computedIterator = computed.utf8.makeIterator()
+
+        // Iterate over the locally computed (trusted) HMAC length.
+        for _ in computed.utf8 {
+            let cChar = Int(computedIterator.next() ?? 0)
+            let eChar = Int(expectedIterator.next() ?? 0)
+            diff |= (cChar ^ eChar)
+        }
+
+        // Diff length differences directly rather than looping remainder
+        diff |= (computed.count ^ expected.count)
+
         return diff == 0
     }
 }
