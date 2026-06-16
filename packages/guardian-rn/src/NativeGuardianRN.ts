@@ -17,13 +17,6 @@ export interface Spec extends TurboModule {
   stop(): Promise<void>;
 
   /**
-   * Deliver the 32-byte HMAC session key to JS as a base64 string.
-   * May only be called once per process lifetime (ADR-0003).
-   * Subsequent calls reject with GUARDIAN_KEY_ALREADY_DELIVERED.
-   */
-  getSessionKey(): Promise<string>;
-
-  /**
    * Install the JSI HostObject into the JS runtime.
    * Called internally by start(); exposed here so the TurboModule spec
    * includes the binding — actual JSI install happens on the native side.
