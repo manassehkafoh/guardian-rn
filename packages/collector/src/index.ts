@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
+import jwt from 'jsonwebtoken';
 
 const app = Fastify({ logger: true });
+
+const JWT_SECRET = process.env.JWT_SECRET ?? 'dev_secret_do_not_use_in_prod';
 
 app.get('/health', async () => ({
   status: 'ok',
@@ -9,21 +12,29 @@ app.get('/health', async () => ({
 }));
 
 app.post('/ingest', async (request, reply) => {
-  // TODO Phase 3: mTLS validation, HMAC verification, ECS validation, PII redaction, fan-out
+  // TODO(GUARD-1234) Phase 3: mTLS validation, HMAC verification, ECS validation, PII redaction, fan-out
   reply.code(501).send({ error: 'not implemented — Phase 3' });
 });
 
 // Dev-only debug endpoint (disabled in production)
 if (process.env.NODE_ENV !== 'production') {
   app.post('/ingest/debug', async (request, reply) => {
-    // TODO Phase 3: accept dev-bypass HMAC, write directly to Logstash sink
+    // TODO(GUARD-1234) Phase 3: accept dev-bypass HMAC, write directly to Logstash sink
     reply.code(501).send({ error: 'not implemented — Phase 3' });
   });
 }
 
 app.post('/session', async (request, reply) => {
-  // TODO Phase 3: session handshake — return JWT session token
-  reply.code(501).send({ error: 'not implemented — Phase 3' });
+  // TODO(GUARD-1234) Phase 3: session handshake — return JWT session token
+  const token = jwt.sign(
+    {
+      role: 'client',
+      timestamp: Date.now(),
+    },
+    JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+  reply.send({ token });
 });
 
 const PORT = parseInt(process.env.PORT ?? '4200', 10);
