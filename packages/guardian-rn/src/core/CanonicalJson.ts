@@ -27,22 +27,36 @@ export function canonicalJson(value: unknown): string {
 }
 
 function encodeString(s: string): string {
-  let out = '"';
+  const out: string[] = ['"'];
+  let last = 0;
   for (let i = 0; i < s.length; i++) {
     const cp = s.codePointAt(i) ?? 0;
-    if (cp > 0xffff) i++; // surrogate pair
-    if (cp === 0x08) { out += '\\b'; continue; }
-    if (cp === 0x09) { out += '\\t'; continue; }
-    if (cp === 0x0a) { out += '\\n'; continue; }
-    if (cp === 0x0c) { out += '\\f'; continue; }
-    if (cp === 0x0d) { out += '\\r'; continue; }
-    if (cp === 0x22) { out += '\\"'; continue; }
-    if (cp === 0x5c) { out += '\\\\'; continue; }
-    if (cp < 0x20) {
-      out += '\\u' + cp.toString(16).padStart(4, '0');
-      continue;
+
+    let esc = '';
+    if (cp === 0x08) { esc = '\\b'; }
+    else if (cp === 0x09) { esc = '\\t'; }
+    else if (cp === 0x0a) { esc = '\\n'; }
+    else if (cp === 0x0c) { esc = '\\f'; }
+    else if (cp === 0x0d) { esc = '\\r'; }
+    else if (cp === 0x22) { esc = '\\"'; }
+    else if (cp === 0x5c) { esc = '\\\\'; }
+    else if (cp < 0x20) { esc = '\\u' + cp.toString(16).padStart(4, '0'); }
+
+    if (esc !== '') {
+      if (last < i) {
+        out.push(s.slice(last, i));
+      }
+      out.push(esc);
+      last = i + 1;
     }
-    out += String.fromCodePoint(cp);
+
+    if (cp > 0xffff) {
+      i++; // surrogate pair
+    }
   }
-  return out + '"';
+  if (last < s.length) {
+    out.push(s.slice(last));
+  }
+  out.push('"');
+  return out.join('');
 }
