@@ -13,7 +13,7 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     '@typescript-eslint/no-require-imports': 'off', // react-native Platform accessed via require
     'no-console': 'off',
   },
