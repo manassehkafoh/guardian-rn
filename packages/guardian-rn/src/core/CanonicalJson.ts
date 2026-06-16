@@ -15,13 +15,23 @@ export function canonicalJson(value: unknown): string {
   }
   if (typeof value === 'string') return encodeString(value);
   if (Array.isArray(value)) {
-    return '[' + value.map(canonicalJson).join(',') + ']';
+    let out = '[';
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0) out += ',';
+      out += canonicalJson(value[i]);
+    }
+    return out + ']';
   }
   if (typeof value === 'object') {
-    const sorted = Object.keys(value as Record<string, unknown>)
-      .sort()
-      .map((k) => encodeString(k) + ':' + canonicalJson((value as Record<string, unknown>)[k]));
-    return '{' + sorted.join(',') + '}';
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    let out = '{';
+    for (let i = 0; i < keys.length; i++) {
+      if (i > 0) out += ',';
+      const k = keys[i] as string;
+      out += encodeString(k) + ':' + canonicalJson(obj[k]);
+    }
+    return out + '}';
   }
   throw new Error(`CanonicalJson: unsupported type ${typeof value}`);
 }
