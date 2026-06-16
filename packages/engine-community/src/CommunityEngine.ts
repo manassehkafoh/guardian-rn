@@ -47,6 +47,7 @@ export class CommunityEngine implements Engine {
   private pollIntervalMs = POLL_INTERVAL_FOREGROUND_MS;
 
   private readonly detectors: readonly Detector[];
+  private readonly activeChecks: readonly string[];
 
   /** Per-detector timing for health ticks. */
   private lastRunMs = new Map<string, number>();
@@ -65,6 +66,7 @@ export class CommunityEngine implements Engine {
       new BiometricMissingDetector(),
       new ManagedProfileDetector(),
     ];
+    this.activeChecks = this.detectors.map((d) => d.threatId);
   }
 
   async start(context: EngineContext): Promise<void> {
@@ -144,18 +146,24 @@ export class CommunityEngine implements Engine {
   }
 
   private emitHealthTick(): void {
+    const detectorResults = new Array(this.detectors.length);
+    for (let i = 0; i < this.detectors.length; i++) {
+      const threatId = this.detectors[i]!.threatId;
+      detectorResults[i] = {
+        detectorId: threatId,
+        lastRunMs: this.lastRunMs.get(threatId) ?? 0,
+        lastConfidence: this.lastConfidence.get(threatId) ?? 0,
+        status: 'ok' as const,
+      };
+    }
+
     const tick: EngineHealthTick = {
       engineId: ENGINE_ID,
       ts: Date.now(),
       sessionId: this.context?.sessionId ?? '',
       status: 'ok',
-      activeChecks: this.detectors.map((d) => d.threatId),
-      detectorResults: this.detectors.map((d) => ({
-        detectorId: d.threatId,
-        lastRunMs: this.lastRunMs.get(d.threatId) ?? 0,
-        lastConfidence: this.lastConfidence.get(d.threatId) ?? 0,
-        status: 'ok' as const,
-      })),
+      activeChecks: this.activeChecks,
+      detectorResults,
     };
     this.healthSubject.emit(tick);
   }
