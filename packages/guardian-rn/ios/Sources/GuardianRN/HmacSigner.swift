@@ -19,9 +19,15 @@ enum HmacSigner {
     /// Constant-time comparison to prevent timing side-channels.
     static func verify(canonicalPayload: String, keyBytes: [UInt8], expected: String) -> Bool {
         let computed = sign(canonicalPayload: canonicalPayload, keyBytes: keyBytes)
-        guard computed.count == expected.count else { return false }
-        var diff: UInt8 = 0
-        for (a, b) in zip(computed.utf8, expected.utf8) { diff |= a ^ b }
-        return diff == 0
+        var diff: Int = 0
+        var expectedIterator = expected.utf8.makeIterator()
+        for a in computed.utf8 {
+            let b = expectedIterator.next() ?? 0
+            diff |= Int(a) ^ Int(b)
+        }
+        // If there are still characters remaining in the expected string,
+        // the lengths do not match, which is a mismatch.
+        let hasMoreExpected = expectedIterator.next() != nil
+        return diff == 0 && !hasMoreExpected
     }
 }
