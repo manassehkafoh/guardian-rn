@@ -18,7 +18,7 @@ class GuardianRNModule: NSObject {
     func stop(_ resolve: @escaping RCTPromiseResolveBlock,
               reject: @escaping RCTPromiseRejectBlock) {
         // TODO Phase 2: stop engine, flush telemetry
-        resolve(nil)
+        reject("NOT_IMPLEMENTED", "Engine shutdown and telemetry flush not yet wired — Phase 2", nil)
     }
 
     @objc
