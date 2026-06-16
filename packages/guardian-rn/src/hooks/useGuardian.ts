@@ -159,10 +159,10 @@ export function useGuardian(config: GuardianConfig): void {
       // Notify engines of foreground/background transitions so they can
       // reduce scan frequency when the app is not visible. This is the
       // battery-aware scan throttle (item 3 / ADR-0013).
-      // The return value is an unsubscribe function — unused here because
-      // we rely on React's cleanup to unmount the effect cleanly; the
-      // AppState listener is implicitly removed when the component unmounts.
-      wireAppStateThrottle(configRef.current.engines);
+      const unsubscribeThrottle = wireAppStateThrottle(configRef.current.engines);
+      if (unsubscribeThrottle) {
+        subscriptions.push({ unsubscribe: unsubscribeThrottle });
+      }
     };
 
     // Fire and forget: React's useEffect callback cannot be async directly.
