@@ -4,6 +4,8 @@ import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.js';
 import { PolicyEngine } from '../core/policy.js';
 import { computeHmac } from '../core/HmacEnvelope.js';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useGuardian — primary SDK entry point
@@ -220,16 +222,10 @@ function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefi
 /**
  * Generate a UUIDv4-compliant session identifier.
  *
- * Uses Math.random() as the entropy source — sufficient for session
- * correlation purposes, not for cryptographic key material. The session key
- * (generateSessionKey) uses a separate, stronger entropy source.
+ * Uses uuidv4() backed by react-native-get-random-values as a secure entropy source.
  */
 function generateSessionId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return uuidv4();
 }
 
 /**
@@ -240,10 +236,8 @@ function generateSessionId(): string {
  * generation. This ensures the key is generated in the platform's trusted
  * execution environment.
  *
- * Falls back to Math.random() in test and Storybook environments where the
- * native module is not linked. This fallback produces a key that is NOT
- * cryptographically secure — tests that rely on HMAC correctness must use
- * a fixed test key rather than this fallback.
+ * Falls back to crypto.getRandomValues() in test and Storybook environments where the
+ * native module is not linked.
  */
 function generateSessionKey(): Uint8Array {
   try {
@@ -256,9 +250,9 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // Test/CI fallback: Uses crypto.getRandomValues for cryptographic randomness.
   const key = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  crypto.getRandomValues(key);
   return key;
 }
 
