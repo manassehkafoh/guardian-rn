@@ -52,6 +52,12 @@ describe('SubscriberStore', () => {
     expect(received).toEqual(['root']);
   });
 
+  test('swallows errors and does not propagate them to the caller', () => {
+    const store = new SubscriberStore();
+    store.subscribe(() => { throw new Error('isolated error'); });
+    expect(() => store.dispatch(makeEvent({ threatId: 'root' }))).not.toThrow();
+  });
+
   test('clear() removes all subscribers', () => {
     const store = new SubscriberStore();
     store.subscribe(() => { /* empty */ });
