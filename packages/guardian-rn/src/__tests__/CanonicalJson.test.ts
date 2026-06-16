@@ -44,4 +44,7 @@ describe('canonicalJson — RFC 8785 test vectors', () => {
 
   test('throws on NaN', () =>
     expect(() => canonicalJson(NaN)).toThrow('non-finite'));
+
+  test('throws on undefined', () =>
+    expect(() => canonicalJson(undefined)).toThrow());
 });
