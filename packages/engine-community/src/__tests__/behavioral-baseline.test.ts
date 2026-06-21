@@ -28,7 +28,7 @@ describe('BehavioralBaselineEngine', () => {
 
   test('emits behavioralAnomaly when event count reaches threshold', async () => {
     const engine = new BehavioralBaselineEngine({ anomalyThreshold: 3, windowMs: 10_000 });
-    const upstream = {
+    const _upstream = {
       onThreat: {
         subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }),
       },
@@ -39,7 +39,7 @@ describe('BehavioralBaselineEngine', () => {
     engine.onThreat.subscribe({ next: (e) => anomalies.push(e) });
 
     await engine.start(makeContext());
-    // Simulate upstream events by calling observeEngine with a real Observable
+    // Simulate _upstream events by calling observeEngine with a real Observable
     // and then emitting directly through it
     const { SimpleObservable, emitters } = buildObservable();
     engine.observeEngine({ onThreat: SimpleObservable });
@@ -92,7 +92,7 @@ describe('BehavioralBaselineEngine', () => {
     await engine.stop();
   });
 
-  test('stop() unsubscribes from upstream and drops subsequent events', async () => {
+  test('stop() unsubscribes from _upstream and drops subsequent events', async () => {
     const engine = new BehavioralBaselineEngine({ anomalyThreshold: 2, windowMs: 60_000 });
     const anomalies: ThreatEvent[] = [];
     engine.onThreat.subscribe({ next: (e) => anomalies.push(e) });
