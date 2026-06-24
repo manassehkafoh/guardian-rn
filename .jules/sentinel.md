@@ -1,0 +1,4 @@
+## 2024-06-24 - DoS Vulnerability in HMAC Constant-Time Comparison
+**Vulnerability:** The constant-time string comparison function `constantTimeEqual` in HMAC verification previously iterated over the length of the untrusted user string `a.length` and contained an early return based on string length mismatch (`a.length !== b.length`).
+**Learning:** Iterating based on the untrusted string length allows an attacker to supply excessively long inputs, causing the CPU to exhaust resources and resulting in a Denial of Service (DoS) attack. Additionally, an early return negates the benefits of constant-time comparison.
+**Prevention:** Always iterate over the length of the *trusted* (locally computed) string and pad out-of-bounds indices with `0` when comparing strings of mismatched lengths. Use bitwise operations to compute string length differences without an early return.
