@@ -15,7 +15,7 @@ import type { Detector, DetectorResult } from '../detectors/Detector.js';
 
 const SAMPLE_COUNT = 50;
 const P95_BUDGET_MS = 200;
-const MEDIAN_BUDGET_MS = 50;
+const _MEDIAN_BUDGET_MS = 50; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 function makeContext(): EngineContext {
   return {
