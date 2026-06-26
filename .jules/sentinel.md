@@ -1,0 +1,4 @@
+## 2024-10-30 - Constant-time HMAC comparison bypasses
+**Vulnerability:** The TypeScript `constantTimeEqual` function iterated over the length of the untrusted user-provided HMAC string. A Swift implementation used `.count` instead of `.utf8.count` for string length comparison and truncated length differences with `UInt8`, introducing signature malleability.
+**Learning:** Iterating over untrusted string lengths exposes the system to Denial of Service (DoS) / CPU exhaustion attacks, and Swift string `.count` represents grapheme clusters, not bytes, which can lead to invalid byte comparisons. Length differences truncated to an 8-bit integer may wrap around to zero, bypassing the length check.
+**Prevention:** Strictly iterate over the trusted, internally computed string length, and pad out-of-bounds characters with a bitwise OR default (e.g., `| 0`) when performing constant-time comparisons in JS/TS. In Swift, use `.utf8.count` and `Int` accumulation.

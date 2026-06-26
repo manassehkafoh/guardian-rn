@@ -19,9 +19,9 @@ enum HmacSigner {
     /// Constant-time comparison to prevent timing side-channels.
     static func verify(canonicalPayload: String, keyBytes: [UInt8], expected: String) -> Bool {
         let computed = sign(canonicalPayload: canonicalPayload, keyBytes: keyBytes)
-        guard computed.count == expected.count else { return false }
-        var diff: UInt8 = 0
-        for (a, b) in zip(computed.utf8, expected.utf8) { diff |= a ^ b }
+        guard computed.utf8.count == expected.utf8.count else { return false }
+        var diff: Int = 0
+        for (a, b) in zip(computed.utf8, expected.utf8) { diff |= Int(a ^ b) }
         return diff == 0
     }
 }
