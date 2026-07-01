@@ -1,0 +1,4 @@
+## 2024-07-01 - Fix Math.random() usage for session and key generation
+**Vulnerability:** The `useGuardian` hook used `Math.random()` to generate the `sessionId` UUID and as a fallback for `sessionKey`. `Math.random()` is not a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG), making these values predictable.
+**Learning:** React Native environments lack a global `crypto.getRandomValues()` by default. Without explicit polyfills, developers might fall back to `Math.random()`, silently weakening the security of identifiers and crypto keys used in HMAC envelopes.
+**Prevention:** Always install and import `react-native-get-random-values` before relying on cryptographic functions (like `uuid` or `crypto.getRandomValues()`) in React Native apps, and never fallback to `Math.random()` for any security-sensitive logic.
