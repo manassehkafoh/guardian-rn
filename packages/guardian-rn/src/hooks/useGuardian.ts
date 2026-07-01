@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
@@ -225,11 +227,7 @@ function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefi
  * (generateSessionKey) uses a separate, stronger entropy source.
  */
 function generateSessionId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return uuidv4();
 }
 
 /**
@@ -258,7 +256,7 @@ function generateSessionKey(): Uint8Array {
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  crypto.getRandomValues(key);
   return key;
 }
 

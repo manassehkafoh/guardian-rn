@@ -28,7 +28,8 @@ describe('BehavioralBaselineEngine', () => {
 
   test('emits behavioralAnomaly when event count reaches threshold', async () => {
     const engine = new BehavioralBaselineEngine({ anomalyThreshold: 3, windowMs: 10_000 });
-    const upstream = {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const upstream = {
       onThreat: {
         subscribe: jest.fn().mockReturnValue({ unsubscribe: jest.fn() }),
       },
