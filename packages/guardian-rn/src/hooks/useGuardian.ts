@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
@@ -220,16 +222,11 @@ function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefi
 /**
  * Generate a UUIDv4-compliant session identifier.
  *
- * Uses Math.random() as the entropy source — sufficient for session
- * correlation purposes, not for cryptographic key material. The session key
- * (generateSessionKey) uses a separate, stronger entropy source.
+ * Uses uuidv4() which relies on the react-native-get-random-values polyfill
+ * for cryptographically secure pseudo-random number generation.
  */
 function generateSessionId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return uuidv4();
 }
 
 /**
@@ -256,9 +253,15 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // Test/CI fallback: uses Node's webcrypto in test environments where NativeModules are unavailable,
+  // or falls back to Math.random() if crypto is completely unavailable (like in some browser environments
+  // or extremely restricted runtimes).
   const key = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(key);
+  } else {
+    for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  }
   return key;
 }
 
