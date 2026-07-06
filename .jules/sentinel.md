@@ -1,0 +1,4 @@
+## 2024-07-06 - Hardcoded Secrets in Docker Compose
+**Vulnerability:** Hardcoded credentials (`changeme` and `admin`) were found in `packages/collector/docker-compose.yml` for Elasticsearch, Kibana, Logstash, and Grafana.
+**Learning:** Hardcoding default passwords or fallback defaults in Docker Compose configurations allows out-of-the-box deployments to run with known weak credentials, exposing the observability stack to unauthorized access.
+**Prevention:** Never use hardcoded default passwords or fallback defaults (e.g., `${VAR:-default}`) in Docker Compose configurations. Require explicit environment variables via interpolation (`${VAR}`) and provide a `.env.example` file to guide secure deployment. When defining inline shell commands (e.g., healthchecks) that require interpolating environment variables, use a double dollar sign (e.g., `$${VARIABLE}`) to ensure evaluation at runtime by the container's shell.
