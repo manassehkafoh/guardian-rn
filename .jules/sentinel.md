@@ -1,0 +1,4 @@
+## 2024-05-24 - Hardcoded Secrets in Docker Compose
+**Vulnerability:** Hardcoded credentials (like `ELASTIC_PASSWORD` and `GF_SECURITY_ADMIN_PASSWORD`) were present directly in `docker-compose.yml`, which exposes them to any user with read access to the repository and forces insecure defaults upon deployment.
+**Learning:** Default passwords must not be hardcoded in infrastructure configuration files like Docker Compose. Using fallback defaults (e.g. `${VAR:-default}`) also introduces risk as they might be unintentionally used in production if the environment variable is missed.
+**Prevention:** Always require explicit environment variables for sensitive fields in Docker Compose configs and provide a `.env.example` file to securely guide the deployment. Also, properly interpolate these variables in commands like `healthcheck` via double dollar signs (`$$`).
