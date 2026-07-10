@@ -1,0 +1,4 @@
+## 2024-07-10 - Hardcoded Passwords in Docker Compose Configuration
+**Vulnerability:** The `packages/collector/docker-compose.yml` file contained hardcoded passwords for Elasticsearch (`changeme`) and Grafana (`admin`).
+**Learning:** Hardcoded credentials in infrastructure configuration files pose a critical security risk. They often get committed to version control and are deployed with default values in production environments, leading to unauthorized access. When referencing variables in inline shell commands within `docker-compose.yml` (like healthchecks), we must use `$${VARIABLE}` so `docker-compose` doesn't evaluate it before passing it to the container shell.
+**Prevention:** Always use environment variables for sensitive data in Docker Compose configurations. Ensure `.env.example` is provided to define the required variables, so dependent services do not fail during deployment.
