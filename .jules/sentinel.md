@@ -1,0 +1,5 @@
+## 2026-07-15 - Extracted Hardcoded Default Passwords from Docker Compose
+
+**Vulnerability:** The `packages/collector/docker-compose.yml` file contained hardcoded default passwords for Elasticsearch (`ELASTIC_PASSWORD`, `ELASTICSEARCH_PASSWORD`) and Grafana (`GF_SECURITY_ADMIN_PASSWORD`).
+**Learning:** Never use hardcoded default passwords or fallback defaults (e.g., `${VAR:-default}`) in Docker Compose configurations. Require explicit environment variables and provide a `.env.example` file to guide secure deployment. When defining inline shell commands in `docker-compose.yml` (e.g., within `healthcheck` blocks) that require interpolating environment variables, use a double dollar sign (e.g., `$${ELASTIC_PASSWORD}`) to prevent `docker-compose` from interpreting it early. Ensure the referenced variable is one that actually exists within the container's environment (e.g., `$${ELASTIC_PASSWORD}`), not the host-level variable used to inject it.
+**Prevention:** Always extract credentials into `.env` files. Ensure the accompanying `.env.example` file declares all uniquely named variables required by the config so dependent services do not fail authentication.
