@@ -1,0 +1,4 @@
+## 2024-07-16 - Hardcoded Secrets in Docker Compose
+**Vulnerability:** Hardcoded default passwords (`changeme`, `admin`) were found directly in the `docker-compose.yml` file, risking these defaults being used in production deployments without being changed.
+**Learning:** Default passwords in Docker Compose templates are often deployed as-is. Additionally, when interpolating environment variables in inline shell scripts (like `healthcheck`), you must use double dollar signs (`$${VAR}`) so that `docker-compose` doesn't evaluate the variable too early; it should evaluate the variable present inside the container.
+**Prevention:** Always require explicit environment variables (e.g. `${ELASTIC_PASSWORD}`) for secrets in Docker Compose and provide a `.env.example` file to ensure users provide their own credentials. Use `$${VAR}` for inline shell commands relying on those secrets.
