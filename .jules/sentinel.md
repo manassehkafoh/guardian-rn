@@ -1,0 +1,4 @@
+## 2024-05-24 - Hardcoded Secrets in Docker Compose
+**Vulnerability:** Found hardcoded passwords `changeme` and `admin` in `packages/collector/docker-compose.yml` for Elasticsearch and Grafana, exposing deployment credentials.
+**Learning:** Even local or development-targeted docker-compose setups should avoid hardcoding credentials. They often leak into production when used as deployment templates. The Elasticsearch healthcheck command also contained the hardcoded password and required `$${VARIABLE}` escaping to properly pass the variable to the container's shell.
+**Prevention:** Always use explicit environment variables for sensitive configuration in Docker Compose. Use double dollar signs (`$$`) for inline shell scripts. Provide a `.env.example` file to guide operators to inject secrets safely via their environment or a `.env` file.
