@@ -1,0 +1,4 @@
+## 2024-07-23 - Hardcoded Secrets in Docker Compose
+**Vulnerability:** Hardcoded default passwords (`changeme`, `admin`) in `docker-compose.yml` for Elasticsearch and Grafana services.
+**Learning:** Default configurations can lead to trivially exploited environments if accidentally deployed to production or publicly accessible staging servers. Using inline shell commands in `healthcheck` blocks requires double dollar signs (`$${VAR}`) to ensure proper variable interpolation by the container shell rather than premature evaluation by `docker-compose`.
+**Prevention:** Always require explicit environment variables for sensitive configuration options in `docker-compose.yml` and provide a `.env.example` file to guide secure deployment. Use `$${VAR}` for container-evaluated variables in inline shell commands.
