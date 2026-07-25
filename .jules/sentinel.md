@@ -1,0 +1,4 @@
+## 2026-07-25 - Hardcoded Credentials in Docker Compose
+**Vulnerability:** Found hardcoded default credentials (`changeme` and `admin`) in `packages/collector/docker-compose.yml` for Elasticsearch and Grafana.
+**Learning:** Hardcoded credentials in orchestration files pose a critical security risk as they can be easily leaked and used out-of-the-box in deployments without prompting users to set secure values. Additionally, when using inline shell commands (e.g., in `healthcheck` blocks) that require interpolating environment variables, it's essential to use a double dollar sign (e.g., `$${VARIABLE}`) to prevent `docker-compose` from interpreting it early, ensuring the literal string is evaluated correctly by the container's shell.
+**Prevention:** Always extract credentials to environment variables, require explicit setup (e.g., via a `.env.example` file) without fallbacks like `${VAR:-default}`, and properly escape variables used within inline shell commands.
