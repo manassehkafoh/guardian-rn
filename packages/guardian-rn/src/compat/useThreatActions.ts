@@ -48,6 +48,10 @@ const FREERASP_MAP: Partial<Record<ThreatId, keyof FreeRaspListeners>> = {
   malware: 'malware',
 };
 
+const FREERASP_ENTRIES = Object.entries(FREERASP_MAP) as Array<
+  [ThreatId, keyof FreeRaspListeners]
+>;
+
 /**
  * Converts a freerasp-style listeners object into a GuardianActions-compatible map.
  * Use with GuardianConfig.actions for a drop-in migration path.
@@ -57,9 +61,7 @@ export function fromFreeRaspListeners(
 ): Partial<Record<ThreatId, (event: ThreatEvent) => void>> {
   const actions: Partial<Record<ThreatId, (event: ThreatEvent) => void>> = {};
 
-  for (const [threatId, listenerKey] of Object.entries(FREERASP_MAP) as Array<
-    [ThreatId, keyof FreeRaspListeners]
-  >) {
+  for (const [threatId, listenerKey] of FREERASP_ENTRIES) {
     const cb = listeners[listenerKey];
     if (!cb) continue;
 
