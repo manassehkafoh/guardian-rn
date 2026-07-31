@@ -1,0 +1,4 @@
+## 2026-07-31 - Hardcoded Passwords in Docker Compose
+**Vulnerability:** Found hardcoded passwords (`changeme`, `admin`) in `packages/collector/docker-compose.yml` for Elasticsearch, Kibana, Logstash, and Grafana.
+**Learning:** Hardcoding credentials in Docker Compose files (especially when pushed to a repository) is a critical security risk. When deploying out-of-the-box, services might default to these weak credentials if not manually overridden.
+**Prevention:** Extract all credentials to environment variables (e.g., `${ELASTIC_PASSWORD}`). Provide a `.env.example` file that declares the required variables, guiding users to supply strong, unique passwords upon deployment. For inline healthcheck commands, use `$$` (e.g., `$${ELASTIC_PASSWORD}`) to avoid early interpolation by `docker-compose` and allow evaluation within the container's shell.
