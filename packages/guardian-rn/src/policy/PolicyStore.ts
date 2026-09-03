@@ -94,7 +94,9 @@ export class PolicyStore {
         const remote = await this.fetchRemote(this.endpoint);
         // Persist immediately so the next launch can use this map
         // even if the network is unavailable.
-        await this.persist(remote);
+        this.persist(remote).catch(() => {
+          // Fire-and-forget background persistence
+        });
         return remote;
       } catch {
         // Network error, timeout, or malformed response — fall through to cache.
