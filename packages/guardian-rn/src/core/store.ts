@@ -11,17 +11,26 @@ let nextId = 1;
 
 export class SubscriberStore {
   private readonly subscribers = new Map<string, Subscriber>();
+  private handlersArray: ThreatHandler[] | null = null;
 
   subscribe(handler: ThreatHandler): () => void {
     const id = `sub-${nextId++}`;
     this.subscribers.set(id, { id, handler });
-    return () => this.subscribers.delete(id);
+    this.handlersArray = null;
+    return () => {
+      this.subscribers.delete(id);
+      this.handlersArray = null;
+    };
   }
 
   dispatch(event: ThreatEvent): void {
-    for (const sub of this.subscribers.values()) {
+    if (this.handlersArray === null) {
+      this.handlersArray = Array.from(this.subscribers.values()).map(s => s.handler);
+    }
+    const handlers = this.handlersArray;
+    for (let i = 0; i < handlers.length; i++) {
       try {
-        sub.handler(event);
+        handlers[i](event);
       } catch {
         // Isolate handler failures — one bad subscriber must not block others
       }
@@ -34,5 +43,6 @@ export class SubscriberStore {
 
   clear(): void {
     this.subscribers.clear();
+    this.handlersArray = null;
   }
 }
