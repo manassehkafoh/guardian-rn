@@ -17,6 +17,20 @@ const STORAGE_KEY = 'guardian:policy-store:v1';
 /** A partial map from threat identifiers to their assigned response policy. */
 export type PolicyMap = Partial<Record<ThreatId, ResponsePolicy>>;
 
+const VALID_POLICIES = new Set(['telemetry', 'restrict', 'lockout', 'kill']);
+
+function isPolicyMap(data: unknown): data is PolicyMap {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return false;
+  }
+  for (const value of Object.values(data)) {
+    if (typeof value !== 'string' || !VALID_POLICIES.has(value)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PolicyStore
 // ─────────────────────────────────────────────────────────────────────────────
@@ -144,7 +158,11 @@ export class PolicyStore {
     const raw = await this.storage.get(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_POLICIES };
     try {
-      return JSON.parse(raw) as PolicyMap;
+      const data = JSON.parse(raw);
+      if (!isPolicyMap(data)) {
+        return { ...DEFAULT_POLICIES };
+      }
+      return data;
     } catch {
       // Corrupt or incompatible cached data — discard and use defaults.
       return { ...DEFAULT_POLICIES };
@@ -168,6 +186,10 @@ export class PolicyStore {
     if (!response.ok) {
       throw new Error(`policy fetch failed: HTTP ${response.status}`);
     }
-    return (await response.json()) as PolicyMap;
+    const data = await response.json();
+    if (!isPolicyMap(data)) {
+      throw new Error('policy fetch failed: invalid schema');
+    }
+    return data;
   }
 }
