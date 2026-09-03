@@ -8,13 +8,12 @@ import { computeHmac } from '../core/HmacEnvelope.js';
 import { canonicalJson } from '../core/CanonicalJson.js';
 import type { GuardianEnvelope } from '../core/HmacEnvelope.js';
 import type { ThreatPayload } from '../core/ThreatPayload.js';
-import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
+import { NOOP_SIGN, makeConfig } from './__utils__/test-utils.js';
 
 const SESSION_KEY = new Uint8Array(32).fill(0xab);
 const ATTACKER_KEY = new Uint8Array(32).fill(0xff); // different key
 const SESSION_ID = 'security-test-session';
-const NOOP_SIGN = (_d: string) => `sha256=${'0'.repeat(64)}`;
 
 function makeEnvelope(seq: number, payload: ThreatPayload, key = SESSION_KEY): GuardianEnvelope {
   return {
@@ -91,10 +90,6 @@ describe('Security: attacker injection', () => {
 // ── Policy bypass ─────────────────────────────────────────────────────────
 
 describe('Security: policy bypass attempt', () => {
-  function makeConfig(overrides: Partial<GuardianConfig> = {}): GuardianConfig {
-    return { tenantId: 'test', engines: [], actions: {}, ...overrides };
-  }
-
   test('low-confidence event does not trigger kill policy', () => {
     const onKill = jest.fn();
     const terminate = jest.fn();
