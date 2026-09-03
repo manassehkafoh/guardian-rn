@@ -39,15 +39,27 @@ const HEALTH_INTERVAL_MS = 30_000;
  * an external RxJS dependency while keeping the Observable contract intact.
  */
 class SimpleSubject<T> implements Observable<T> {
-  private readonly observers = new Set<Observer<T>>();
+  private observers: Observer<T>[] = [];
 
   subscribe(observer: Observer<T>): Subscription {
-    this.observers.add(observer);
-    return { unsubscribe: () => this.observers.delete(observer) };
+    this.observers.push(observer);
+    return {
+      unsubscribe: () => {
+        const idx = this.observers.indexOf(observer);
+        if (idx !== -1) {
+          this.observers.splice(idx, 1);
+        }
+      },
+    };
   }
 
   emit(value: T): void {
-    for (const obs of this.observers) obs.next(value);
+    // Take a shallow copy to prevent concurrent modification during iteration
+    const obs = this.observers.slice();
+    const len = obs.length;
+    for (let i = 0; i < len; i++) {
+      obs[i]!.next(value);
+    }
   }
 }
 
