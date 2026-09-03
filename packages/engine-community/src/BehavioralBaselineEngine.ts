@@ -1,6 +1,7 @@
 import type { Engine, EngineContext, EngineHealthTick } from '@guardian/rn/src/engine/Engine.js';
 import type { ThreatEvent } from '@guardian/rn/src/events/ThreatEvent.js';
-import type { Observable, Observer, Subscription } from '@guardian/rn/src/types/Observable.js';
+import type { Observable, Subscription } from '@guardian/rn/src/types/Observable.js';
+import { SimpleSubject } from './utils/SimpleSubject.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -33,23 +34,6 @@ const HEALTH_INTERVAL_MS = 30_000;
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal Observable implementation
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Minimal hot Subject implementation. Shared with CommunityEngine to avoid
- * an external RxJS dependency while keeping the Observable contract intact.
- */
-class SimpleSubject<T> implements Observable<T> {
-  private readonly observers = new Set<Observer<T>>();
-
-  subscribe(observer: Observer<T>): Subscription {
-    this.observers.add(observer);
-    return { unsubscribe: () => this.observers.delete(observer) };
-  }
-
-  emit(value: T): void {
-    for (const obs of this.observers) obs.next(value);
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configuration interface
