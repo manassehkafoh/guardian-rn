@@ -1,17 +1,8 @@
 import { PolicyEngine } from '../core/policy.js';
-import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
+import { makeConfig } from './utils/makeConfig.js';
 
 const NOOP_SIGN = (_data: string) => `sha256=${'0'.repeat(64)}`;
-
-function makeConfig(overrides: Partial<GuardianConfig> = {}): GuardianConfig {
-  return {
-    tenantId: 'test-tenant',
-    engines: [],
-    actions: {},
-    ...overrides,
-  };
-}
 
 /**
  * Session expiry is emitted by useGuardian via a setTimeout.
