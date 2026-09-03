@@ -79,4 +79,28 @@ describe('PolicyStore', () => {
     const loaded = await store.load();
     expect(loaded).toEqual(cachedMap);
   });
+
+  test('invalid remote schema falls back to cached policies', async () => {
+    const storage = new InMemoryEncryptedStorage();
+    const cachedMap = { root: 'lockout' as const };
+    await storage.set('guardian:policy-store:v1', JSON.stringify(cachedMap));
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ root: 'allow', other: 'invalid' }), // invalid values
+    }) as jest.MockedFunction<typeof fetch>;
+
+    const store = new PolicyStore(storage, 'https://guardian.example.com/policies');
+    const loaded = await store.load();
+    expect(loaded).toEqual(cachedMap);
+  });
+
+  test('invalid cached schema falls back to DEFAULT_POLICIES', async () => {
+    const storage = new InMemoryEncryptedStorage();
+    await storage.set('guardian:policy-store:v1', JSON.stringify({ root: 'allow' })); // invalid values
+
+    const store = new PolicyStore(storage);
+    const loaded = await store.load();
+    expect(loaded).toEqual(DEFAULT_POLICIES);
+  });
 });
