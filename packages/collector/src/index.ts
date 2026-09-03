@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import jwt from 'jsonwebtoken';
 
 const app = Fastify({ logger: true });
 
@@ -22,8 +23,32 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.post('/session', async (request, reply) => {
-  // TODO Phase 3: session handshake — return JWT session token
-  reply.code(501).send({ error: 'not implemented — Phase 3' });
+  const body = request.body as { sessionId?: string; publicKeyHash?: string } | undefined;
+
+  if (!body || typeof body.sessionId !== 'string' || typeof body.publicKeyHash !== 'string') {
+    return reply.code(400).send({ error: 'missing or invalid sessionId or publicKeyHash' });
+  }
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    request.log.error('JWT_SECRET is not configured');
+    return reply.code(500).send({ error: 'internal server error' });
+  }
+
+  const exp = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+  const expiresAt = new Date(exp * 1000).toISOString();
+
+  const sessionToken = jwt.sign(
+    {
+      sessionId: body.sessionId,
+      publicKeyHash: body.publicKeyHash,
+      exp
+    },
+    secret,
+    { algorithm: 'HS256' }
+  );
+
+  return reply.code(200).send({ sessionToken, expiresAt });
 });
 
 const PORT = parseInt(process.env.PORT ?? '4200', 10);

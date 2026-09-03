@@ -82,6 +82,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - LOGSTASH_HOST=logstash
       - LOGSTASH_PORT=5044
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - "4200:4200"
     networks:
