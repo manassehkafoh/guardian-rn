@@ -1,17 +1,5 @@
 import { fromFreeRaspListeners } from '../compat/useThreatActions.js';
-import type { ThreatEvent } from '../events/ThreatEvent.js';
-
-function makeEvent(overrides: Partial<ThreatEvent> = {}): ThreatEvent {
-  return {
-    threatId: 'root',
-    severity: 'high',
-    confidence: 0.95,
-    evidence: {},
-    ts: Date.now(),
-    engineId: 'test',
-    ...overrides,
-  };
-}
+import { makeEvent } from './utils/test-utils.js';
 
 describe('fromFreeRaspListeners', () => {
   test('root maps to privilegedAccess listener', () => {
