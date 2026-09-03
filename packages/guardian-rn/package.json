@@ -24,7 +24,9 @@
     "react-native": ">=0.74.0"
   },
   "dependencies": {
-    "@guardian/schema": "*"
+    "@guardian/schema": "*",
+    "react-native-get-random-values": "^2.0.0",
+    "uuid": "^14.0.2"
   },
   "codegenConfig": {
     "name": "GuardianRNSpec",
@@ -35,6 +37,7 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.2.14",
+    "@types/uuid": "^10.0.0"
   }
 }
