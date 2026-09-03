@@ -197,7 +197,7 @@ export function useGuardian(config: GuardianConfig): void {
  * (Node test runner, Storybook). Engines that do not implement throttle()
  * are silently skipped via the optional-chaining call.
  */
-function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefined {
+export function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefined {
   try {
     const { AppState } = require('react-native') as {
       AppState: {
