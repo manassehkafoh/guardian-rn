@@ -245,7 +245,7 @@ function generateSessionId(): string {
  * cryptographically secure — tests that rely on HMAC correctness must use
  * a fixed test key rather than this fallback.
  */
-function generateSessionKey(): Uint8Array {
+export function generateSessionKey(): Uint8Array {
   try {
     const { NativeModules } = require('react-native') as {
       NativeModules: {
