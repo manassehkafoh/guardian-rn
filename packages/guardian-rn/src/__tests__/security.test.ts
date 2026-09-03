@@ -6,9 +6,9 @@ import { EventBus } from '../bus/EventBus.js';
 import { PolicyEngine } from '../core/policy.js';
 import { computeHmac } from '../core/HmacEnvelope.js';
 import { canonicalJson } from '../core/CanonicalJson.js';
+import { makeConfig } from './test-utils/config.js';
 import type { GuardianEnvelope } from '../core/HmacEnvelope.js';
 import type { ThreatPayload } from '../core/ThreatPayload.js';
-import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 
 const SESSION_KEY = new Uint8Array(32).fill(0xab);
@@ -91,10 +91,6 @@ describe('Security: attacker injection', () => {
 // ── Policy bypass ─────────────────────────────────────────────────────────
 
 describe('Security: policy bypass attempt', () => {
-  function makeConfig(overrides: Partial<GuardianConfig> = {}): GuardianConfig {
-    return { tenantId: 'test', engines: [], actions: {}, ...overrides };
-  }
-
   test('low-confidence event does not trigger kill policy', () => {
     const onKill = jest.fn();
     const terminate = jest.fn();
