@@ -1,21 +1,9 @@
 import { PolicyEngine, DEFAULT_POLICIES } from '../core/policy.js';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
-import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { TerminatorPort } from '../policy/TerminatorPort.js';
+import { makeEvent } from './utils/makeEvent.js';
 
-const NOOP_SIGN = (data: string) => `sha256=${'0'.repeat(64)}`;
-
-function makeEvent(overrides: Partial<ThreatEvent> = {}): ThreatEvent {
-  return {
-    threatId: 'root',
-    severity: 'high',
-    confidence: 0.95,
-    evidence: {},
-    ts: Date.now(),
-    engineId: 'test',
-    ...overrides,
-  };
-}
+const NOOP_SIGN = (_data: string) => `sha256=${'0'.repeat(64)}`;
 
 function makeConfig(overrides: Partial<GuardianConfig> = {}): GuardianConfig {
   return {
