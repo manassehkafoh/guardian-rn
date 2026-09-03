@@ -30,7 +30,7 @@ export class SubscriberStore {
     const handlers = this.handlersArray;
     for (let i = 0; i < handlers.length; i++) {
       try {
-        handlers[i](event);
+        handlers[i]!(event);
       } catch {
         // Isolate handler failures — one bad subscriber must not block others
       }
