@@ -8,7 +8,7 @@ let mockNativeModules: any = {};
 jest.mock('react-native', () => {
   return {
     get NativeModules() {
-      if (globalThis.SIMULATE_RN_THROW) {
+      if ((globalThis as any).SIMULATE_RN_THROW) {
          throw new Error('Cannot find module react-native');
       }
       return mockNativeModules;
