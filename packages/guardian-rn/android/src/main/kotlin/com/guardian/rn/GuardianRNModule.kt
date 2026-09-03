@@ -15,12 +15,37 @@ import com.guardian.rn.generated.ThreatId
 class GuardianRNModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
+    private var threatBus: ThreatBus? = null
+    private var nativeSessionKey: ByteArray? = null
+    private var currentSessionId: String? = null
+
     override fun getName(): String = "GuardianRN"
 
     @ReactMethod
     fun start(config: ReadableMap, promise: Promise) {
-        // TODO Phase 2: initialise engine, session key, HMAC envelope
-        promise.resolve(null)
+        try {
+            if (threatBus != null) {
+                promise.resolve(currentSessionId)
+                return
+            }
+
+            val sessionId = if (config.hasKey("sessionId")) {
+                config.getString("sessionId") ?: java.util.UUID.randomUUID().toString()
+            } else {
+                java.util.UUID.randomUUID().toString()
+            }
+
+            val skm = SessionKeyManager()
+            val keyBytes = skm.getSessionKeyBytes()
+
+            nativeSessionKey = keyBytes
+            currentSessionId = sessionId
+            threatBus = ThreatBus(sessionId, keyBytes)
+
+            promise.resolve(sessionId)
+        } catch (e: Exception) {
+            promise.reject("GUARDIAN_START_ERROR", e.message)
+        }
     }
 
     @ReactMethod
