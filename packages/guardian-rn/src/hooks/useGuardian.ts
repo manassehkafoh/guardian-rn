@@ -256,7 +256,20 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
+  // WebCrypto fallback (e.g. for newer JS environments or polyfilled tests)
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production');
+  if (!isDev) {
+    throw new Error('CRITICAL: GuardianKeyProvider native module is not available. Refusing to generate insecure session key in production.');
+  }
+
+  console.warn('WARNING: GuardianKeyProvider native module is missing. Using insecure Math.random() fallback.');
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
