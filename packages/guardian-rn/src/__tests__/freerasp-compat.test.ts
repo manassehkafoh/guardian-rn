@@ -1,6 +1,8 @@
-import { fromTalsecConfig, type TalsecConfig } from '../compat/freerasp-rn.js';
+import { fromTalsecConfig } from '../compat/freerasp-rn.js';
 
-function makeTalsecConfig(overrides: Partial<TalsecConfig> = {}): TalsecConfig {
+function makeTalsecConfig(
+  overrides: Partial<Parameters<typeof fromTalsecConfig>[0]> = {},
+): Parameters<typeof fromTalsecConfig>[0] {
   return {
     androidConfig: {
       packageName: 'com.example.app',
