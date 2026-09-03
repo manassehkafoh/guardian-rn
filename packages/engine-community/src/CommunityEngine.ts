@@ -20,15 +20,25 @@ const HEALTH_INTERVAL_MS = 30_000;
 const CONFIDENCE_THRESHOLD = 0.5;
 
 class SimpleSubject<T> implements Observable<T> {
-  private readonly observers = new Set<Observer<T>>();
+  private observers: Observer<T>[] = [];
 
   subscribe(observer: Observer<T>): Subscription {
-    this.observers.add(observer);
-    return { unsubscribe: () => this.observers.delete(observer) };
+    this.observers.push(observer);
+    return {
+      unsubscribe: () => {
+        const index = this.observers.indexOf(observer);
+        if (index !== -1) {
+          this.observers.splice(index, 1);
+        }
+      }
+    };
   }
 
   emit(value: T): void {
-    for (const obs of this.observers) obs.next(value);
+    const obs = this.observers.slice();
+    for (let i = 0; i < obs.length; i++) {
+      obs[i]?.next(value);
+    }
   }
 }
 
