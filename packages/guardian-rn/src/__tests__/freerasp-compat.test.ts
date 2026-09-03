@@ -1,4 +1,6 @@
-import { fromTalsecConfig, type TalsecConfig } from '../compat/freerasp-rn.js';
+import { fromTalsecConfig } from '../compat/freerasp-rn.js';
+
+type TalsecConfig = Parameters<typeof fromTalsecConfig>[0];
 
 function makeTalsecConfig(overrides: Partial<TalsecConfig> = {}): TalsecConfig {
   return {
