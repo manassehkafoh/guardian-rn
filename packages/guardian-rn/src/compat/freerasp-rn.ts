@@ -1,7 +1,7 @@
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatId } from '../generated/ThreatId.js';
 import type { ResponsePolicy } from '../generated/ResponsePolicy.js';
-import { fromFreeRaspListeners, type FreeRaspListeners } from './useThreatActions.js';
+import { fromFreeRaspListeners } from './useThreatActions.js';
 
 /**
  * Mirrors TalsecConfig from freerasp-react-native v6.x.
@@ -19,7 +19,7 @@ export interface TalsecConfig {
     teamId: string;
   };
   isProd: boolean;
-  listeners: FreeRaspListeners;
+  listeners: Parameters<typeof fromFreeRaspListeners>[0];
 }
 
 /**
