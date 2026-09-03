@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
@@ -220,16 +222,11 @@ function wireAppStateThrottle(engines: readonly Engine[]): (() => void) | undefi
 /**
  * Generate a UUIDv4-compliant session identifier.
  *
- * Uses Math.random() as the entropy source — sufficient for session
- * correlation purposes, not for cryptographic key material. The session key
- * (generateSessionKey) uses a separate, stronger entropy source.
+ * Uses a cryptographically secure pseudo-random number generator (CSPRNG)
+ * to ensure unpredictability.
  */
 function generateSessionId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return uuidv4();
 }
 
 /**
