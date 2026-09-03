@@ -20,11 +20,13 @@ export class SubscriberStore {
 
   dispatch(event: ThreatEvent): void {
     for (const sub of this.subscribers.values()) {
-      try {
-        sub.handler(event);
-      } catch {
-        // Isolate handler failures — one bad subscriber must not block others
-      }
+      queueMicrotask(() => {
+        try {
+          sub.handler(event);
+        } catch {
+          // Isolate handler failures — one bad subscriber must not block others
+        }
+      });
     }
   }
 

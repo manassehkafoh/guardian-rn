@@ -14,23 +14,25 @@ function makeEvent(overrides: Partial<ThreatEvent> = {}): ThreatEvent {
 }
 
 describe('SubscriberStore', () => {
-  test('dispatches event to all subscribers', () => {
+  test('dispatches event to all subscribers', async () => {
     const store = new SubscriberStore();
     const a: string[] = [], b: string[] = [];
     store.subscribe((e) => a.push(e.threatId));
     store.subscribe((e) => b.push(e.threatId));
     store.dispatch(makeEvent({ threatId: 'root' }));
+    await new Promise(r => setTimeout(r, 0));
     expect(a).toEqual(['root']);
     expect(b).toEqual(['root']);
   });
 
-  test('unsubscribe stops delivery', () => {
+  test('unsubscribe stops delivery', async () => {
     const store = new SubscriberStore();
     const received: string[] = [];
     const unsub = store.subscribe((e) => received.push(e.threatId));
     store.dispatch(makeEvent({ threatId: 'root' }));
     unsub();
     store.dispatch(makeEvent({ threatId: 'debugger' }));
+    await new Promise(r => setTimeout(r, 0));
     expect(received).toEqual(['root']);
   });
 
@@ -43,12 +45,13 @@ describe('SubscriberStore', () => {
     expect(store.size).toBe(0);
   });
 
-  test('faulty handler does not block other handlers', () => {
+  test('faulty handler does not block other handlers', async () => {
     const store = new SubscriberStore();
     const received: string[] = [];
     store.subscribe(() => { throw new Error('handler crash'); });
     store.subscribe((e) => received.push(e.threatId));
     expect(() => store.dispatch(makeEvent({ threatId: 'root' }))).not.toThrow();
+    await new Promise(r => setTimeout(r, 0));
     expect(received).toEqual(['root']);
   });
 
