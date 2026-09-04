@@ -256,6 +256,25 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Explicitly prevent using insecure Math.random() in production
+  const isProduction =
+    (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') ||
+    // @ts-ignore -- __DEV__ is injected by React Native packager
+    (typeof __DEV__ !== 'undefined' && !__DEV__);
+
+  if (isProduction) {
+    throw new Error(
+      'GuardianSDK: Secure random number generation is not available. ' +
+        'Ensure GuardianKeyProvider native module is installed or a Web Crypto polyfill is present.'
+    );
+  }
+
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
