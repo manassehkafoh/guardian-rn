@@ -1,0 +1,4 @@
+## 2024-05-18 - [Insecure Cryptographic Randomness Fallback]
+**Vulnerability:** The SDK used `Math.random()` as a fallback for generating a 32-byte session key if the native module (`GuardianKeyProvider`) failed or was unavailable, meaning production apps missing the module could silently generate insecure cryptographic keys.
+**Learning:** React Native environments might not always have native modules correctly linked, and standard web globals like `crypto` are not guaranteed. However, silently falling back to a non-CSPRNG like `Math.random()` for critical key material compromises the security of all subsequent HMAC signatures.
+**Prevention:** Always prioritize `globalThis.crypto.getRandomValues` when available. Crucially, explicitly detect production environments and throw a hard error rather than allowing a weak fallback, failing securely instead of silently degrading encryption strength.
