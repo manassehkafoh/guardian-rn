@@ -256,7 +256,20 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // JS fallback: attempt crypto.getRandomValues if available
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    return globalThis.crypto.getRandomValues(key);
+  }
+
+  // Final fallback: Math.random (Test/CI only)
+  if (
+    (typeof __DEV__ !== 'undefined' && __DEV__ === false) ||
+    (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production')
+  ) {
+    throw new Error('Insecure Math.random() fallback used in production for cryptographic key generation');
+  }
+
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
