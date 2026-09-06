@@ -256,6 +256,25 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
+  // Fallback 1: globalThis.crypto.getRandomValues if available (e.g. some modern JS engines)
+  try {
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+      const key = new Uint8Array(32);
+      globalThis.crypto.getRandomValues(key);
+      return key;
+    }
+  } catch { /* crypto not available — fall through */ }
+
+  // Fallback 2: Math.random (NOT cryptographically secure!)
+  // Ensure this NEVER runs in production.
+  const isProd =
+    (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
+    (typeof __DEV__ !== 'undefined' && !__DEV__);
+
+  if (isProd) {
+    throw new Error('Guardian RN: Unable to generate secure session key in production environment.');
+  }
+
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
