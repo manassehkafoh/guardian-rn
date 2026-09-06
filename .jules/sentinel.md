@@ -1,0 +1,5 @@
+## 2024-09-06 - Insecure Session Key Generation Fallback in Production
+
+**Vulnerability:** The React Native hook `useGuardian` falls back to `Math.random()` to generate cryptographic session keys when the native `GuardianKeyProvider` is unavailable. This was intended as a test/CI fallback but lacked strict environment checks, meaning it could potentially execute in a production environment if the native module failed to load.
+**Learning:** Security-critical fallbacks that rely on pseudo-random number generators (PRNGs) like `Math.random()` are not cryptographically secure and can lead to severe vulnerabilities like spoofing attacks (e.g. predictable HMAC signing keys). It's crucial to distinguish between test/development fallbacks and production behavior.
+**Prevention:** Always strictly enforce environment checks (e.g., checking `__DEV__` or `NODE_ENV === 'production'`) around insecure fallbacks designed for testing. Throw explicit errors in production when secure primitives are unavailable rather than silently degrading security. Additionally, utilize native web APIs like `globalThis.crypto.getRandomValues` when possible as a middle-tier fallback.
