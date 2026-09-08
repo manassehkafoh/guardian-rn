@@ -1,0 +1,4 @@
+## 2024-09-08 - Secure session key generation fallback
+**Vulnerability:** A fallback to `Math.random` was used for session key generation if the native module was unavailable. `Math.random` is not a CSPRNG and could lead to predictable session keys in non-native environments (like web).
+**Learning:** React Native code that shares logic or falls back gracefully often lacks native modules in certain environments. Using `Math.random` as a catch-all fallback for cryptographic keys is dangerous, as it might accidentally be executed in production if the native module fails to load.
+**Prevention:** Fall back to `globalThis.crypto.getRandomValues` first. If that fails (e.g. older JS environments), explicitly throw an error in production (`NODE_ENV === 'production'` or `__DEV__ === false`) rather than using insecure entropy.
