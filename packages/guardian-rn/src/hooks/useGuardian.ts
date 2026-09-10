@@ -245,6 +245,9 @@ function generateSessionId(): string {
  * cryptographically secure — tests that rely on HMAC correctness must use
  * a fixed test key rather than this fallback.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention -- __DEV__ is injected by RN packager
+declare const __DEV__: boolean | undefined;
+
 function generateSessionKey(): Uint8Array {
   try {
     const { NativeModules } = require('react-native') as {
@@ -255,6 +258,17 @@ function generateSessionKey(): Uint8Array {
     const raw = NativeModules.GuardianKeyProvider?.generateSessionKey();
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
+
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  const isProd = (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') || (typeof __DEV__ !== 'undefined' && !__DEV__);
+  if (isProd) {
+    throw new Error('GuardianError: Secure random number generation is not available in this environment');
+  }
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);

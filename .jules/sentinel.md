@@ -1,0 +1,4 @@
+## 2024-03-24 - [CRITICAL] Prevent Math.random fallback for cryptographic keys in production
+**Vulnerability:** `generateSessionKey()` in the React Native SDK silently fell back to `Math.random()` to generate the 32-byte HMAC session key if the native module (`GuardianKeyProvider`) failed to load or was unavailable.
+**Learning:** While `Math.random()` was documented as a test/CI fallback, relying on it without strict dev-only environment checks risks deploying weak cryptographic keys to production if native linking fails.
+**Prevention:** When using `Math.random()` as a fallback for secure entropy, explicitly enforce dev-only usage (e.g., throwing an error in production if `__DEV__` is false or `NODE_ENV === 'production'`). Always attempt to use `globalThis.crypto.getRandomValues` first if available before resorting to insecure PRNGs in non-native environments.
