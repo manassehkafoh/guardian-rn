@@ -5,6 +5,9 @@ import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.j
 import { PolicyEngine } from '../core/policy.js';
 import { computeHmac } from '../core/HmacEnvelope.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // useGuardian — primary SDK entry point
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,6 +258,24 @@ function generateSessionKey(): Uint8Array {
     const raw = NativeModules.GuardianKeyProvider?.generateSessionKey();
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
+
+  // Attempt to use globalThis.crypto if available (e.g. some modern test runners or environments)
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Prevent insecure fallback in production
+  const isProd =
+    (typeof __DEV__ !== 'undefined' && !__DEV__) ||
+    (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production');
+
+  if (isProd) {
+    throw new Error(
+      'CSPRNG not available. Cannot generate a secure session key in this environment.'
+    );
+  }
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
