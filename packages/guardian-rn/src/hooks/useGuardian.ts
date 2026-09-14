@@ -256,6 +256,20 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
+  // Try JS Crypto API (available in modern RN/Node)
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Enforce dev-only for Math.random fallback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+  const isDev = typeof (globalThis as any).__DEV__ !== 'undefined' ? (globalThis as any).__DEV__ : process.env.NODE_ENV !== 'production';
+  if (!isDev) {
+    throw new Error('GuardianError: Native module GuardianKeyProvider is not available, and no secure random generator is present. Refusing to generate insecure keys in production.');
+  }
+
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
