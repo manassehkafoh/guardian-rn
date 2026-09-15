@@ -1,0 +1,4 @@
+## 2024-05-15 - [Insecure Session Key Generation Fallback]
+**Vulnerability:** The `generateSessionKey()` function used an insecure fallback to `Math.random()` to generate cryptographic keys if the native module was unavailable, creating predictable session keys and completely compromising HMAC security.
+**Learning:** `Math.random()` was used for test/CI fallback, but could easily leak into production if native modules weren't correctly linked, leading to broken session protection in live environments.
+**Prevention:** Rather than fully relying on native modules without robust fallback, try using `globalThis.crypto.getRandomValues()` as a standard fallback. Most importantly, explicitly enforce dev-only usage (e.g. check `__DEV__` or `NODE_ENV`) when falling back to insecure `Math.random()`, and fail-fast by throwing an error in production environments.
