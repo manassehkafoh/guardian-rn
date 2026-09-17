@@ -232,6 +232,9 @@ function generateSessionId(): string {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 /**
  * Generate a 32-byte cryptographic session key.
  *
@@ -255,6 +258,21 @@ function generateSessionKey(): Uint8Array {
     const raw = NativeModules.GuardianKeyProvider?.generateSessionKey();
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
+
+  try {
+    if (globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+      const key = new Uint8Array(32);
+      globalThis.crypto.getRandomValues(key);
+      return key;
+    }
+  } catch { /* crypto not available — fall through */ }
+
+  const isProd = (typeof __DEV__ !== 'undefined' && __DEV__ === false) ||
+    (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production');
+
+  if (isProd) {
+    throw new Error('GuardianKeyProvider native module is required in production environments to generate secure session keys. Math.random() fallback is strictly disabled for security reasons.');
+  }
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);

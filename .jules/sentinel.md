@@ -1,0 +1,4 @@
+## 2024-05-10 - Insecure Cryptographic Fallback in React Native hook
+**Vulnerability:** A silent fallback to `Math.random()` inside `generateSessionKey()` in `packages/guardian-rn/src/hooks/useGuardian.ts` could be used to generate session keys if the native `GuardianKeyProvider` failed to load in production, compromising cryptographic identity logic.
+**Learning:** React Native projects relying on NativeModules for crypto must ensure failures don't silently degrade to insecure Math.random fallbacks, especially because module registration can sometimes fail invisibly in certain RN versions or bare setups.
+**Prevention:** If an insecure fallback is provided for testing or Storybook, explicitly fence it using `__DEV__` and `process.env.NODE_ENV` checks. Attempt to use standard web crypto (`globalThis.crypto.getRandomValues`) if available as an intermediate fallback, and fatally crash rather than gracefully degrading to Math.random in production.
