@@ -115,9 +115,9 @@ export class CommunityEngine implements Engine {
     if (!this.running) return;
     const results = await Promise.allSettled(
       this.detectors.map(async (d) => {
-        const start = Date.now();
+        const start = performance.now();
         const r = await d.run();
-        this.lastRunMs.set(d.threatId, Date.now() - start);
+        this.lastRunMs.set(d.threatId, performance.now() - start);
         this.lastConfidence.set(d.threatId, r.confidence);
         return { d, r };
       }),
