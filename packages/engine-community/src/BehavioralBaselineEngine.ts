@@ -267,12 +267,17 @@ export class BehavioralBaselineEngine implements Engine {
 
   /**
    * Remove timestamps that have aged out of the rolling window.
-   * Uses filter() for simplicity — the array stays small in practice
-   * (bounded by scan rate and window duration).
+   * Since the array is sorted by time, we can find the first valid
+   * timestamp and slice the array to avoid traversing the entire list.
    */
   private prune(now: number): void {
     const cutoff = now - this.windowMs;
-    this.eventTimestamps = this.eventTimestamps.filter((t) => t >= cutoff);
+    const idx = this.eventTimestamps.findIndex((t) => t >= cutoff);
+    if (idx === -1) {
+      this.eventTimestamps = [];
+    } else if (idx > 0) {
+      this.eventTimestamps = this.eventTimestamps.slice(idx);
+    }
   }
 
   private emitHealthTick(): void {
