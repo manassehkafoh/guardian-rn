@@ -164,7 +164,13 @@ export class OODAController {
    */
   private prune(now: number): void {
     const cutoff = now - this.cfg.windowMs;
-    this.eventTimestamps = this.eventTimestamps.filter((t) => t >= cutoff);
+    let i = 0;
+    while (i < this.eventTimestamps.length && this.eventTimestamps[i]! < cutoff) {
+      i++;
+    }
+    if (i > 0) {
+      this.eventTimestamps.splice(0, i);
+    }
 
     // Re-check escalation state after pruning.
     // If pruning dropped us below the escalation count, clear the flag.
