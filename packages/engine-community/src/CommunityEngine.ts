@@ -1,6 +1,6 @@
 import type { Engine, EngineContext, EngineHealthTick } from '@guardian/rn/src/engine/Engine.js';
 import type { ThreatEvent } from '@guardian/rn/src/events/ThreatEvent.js';
-import type { Observable, Observer, Subscription } from '@guardian/rn/src/types/Observable.js';
+import type { Observable } from '@guardian/rn/src/types/Observable.js';
 import type { Detector } from './detectors/Detector.js';
 import { RootDetector } from './detectors/RootDetector.js';
 import { DebuggerDetector } from './detectors/DebuggerDetector.js';
@@ -12,25 +12,13 @@ import { InstallationSourceDetector } from './detectors/InstallationSourceDetect
 import { PasscodeMissingDetector } from './detectors/PasscodeMissingDetector.js';
 import { BiometricMissingDetector } from './detectors/BiometricMissingDetector.js';
 import { ManagedProfileDetector } from './detectors/ManagedProfileDetector.js';
+import { SimpleSubject } from './utils/SimpleSubject.js';
 
 const ENGINE_ID = 'community@1.0.0';
 const POLL_INTERVAL_FOREGROUND_MS = 30_000;
 const POLL_INTERVAL_BACKGROUND_MS = 120_000;
 const HEALTH_INTERVAL_MS = 30_000;
 const CONFIDENCE_THRESHOLD = 0.5;
-
-class SimpleSubject<T> implements Observable<T> {
-  private readonly observers = new Set<Observer<T>>();
-
-  subscribe(observer: Observer<T>): Subscription {
-    this.observers.add(observer);
-    return { unsubscribe: () => this.observers.delete(observer) };
-  }
-
-  emit(value: T): void {
-    for (const obs of this.observers) obs.next(value);
-  }
-}
 
 export class CommunityEngine implements Engine {
   readonly id = ENGINE_ID;
