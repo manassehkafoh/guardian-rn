@@ -144,18 +144,32 @@ export class CommunityEngine implements Engine {
   }
 
   private emitHealthTick(): void {
+    const activeChecks = new Array<string>(this.detectors.length);
+    const detectorResults = new Array<{
+      detectorId: string;
+      lastRunMs: number;
+      lastConfidence: number;
+      status: 'ok';
+    }>(this.detectors.length);
+
+    for (let i = 0; i < this.detectors.length; i++) {
+      const d = this.detectors[i]!;
+      activeChecks[i] = d.threatId;
+      detectorResults[i] = {
+        detectorId: d.threatId,
+        lastRunMs: this.lastRunMs.get(d.threatId) ?? 0,
+        lastConfidence: this.lastConfidence.get(d.threatId) ?? 0,
+        status: 'ok',
+      };
+    }
+
     const tick: EngineHealthTick = {
       engineId: ENGINE_ID,
       ts: Date.now(),
       sessionId: this.context?.sessionId ?? '',
       status: 'ok',
-      activeChecks: this.detectors.map((d) => d.threatId),
-      detectorResults: this.detectors.map((d) => ({
-        detectorId: d.threatId,
-        lastRunMs: this.lastRunMs.get(d.threatId) ?? 0,
-        lastConfidence: this.lastConfidence.get(d.threatId) ?? 0,
-        status: 'ok' as const,
-      })),
+      activeChecks,
+      detectorResults,
     };
     this.healthSubject.emit(tick);
   }
