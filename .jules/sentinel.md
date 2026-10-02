@@ -1,0 +1,4 @@
+## 2024-10-24 - Prevent insecure Math.random() cryptographic fallback in production
+**Vulnerability:** The SDK fell back silently to `Math.random()` to generate the 32-byte cryptographic session key (used for HMAC) if the native `GuardianKeyProvider` module failed to load. Since `Math.random()` is not a CSPRNG, this degrades the security of the HMAC envelope mechanism, making session keys predictable in production.
+**Learning:** Native module resolution can fail silently in RN via `try/catch`. Security mechanisms must 'fail closed' in production rather than gracefully falling back to insecure defaults, even if those defaults are convenient for test environments.
+**Prevention:** Explicitly check environment context (e.g., `__DEV__` or `NODE_ENV`). Throw hard errors in production if critical security dependencies are missing, and always prefer secure APIs (`globalThis.crypto.getRandomValues`) over `Math.random()` even in dev fallbacks if possible.
