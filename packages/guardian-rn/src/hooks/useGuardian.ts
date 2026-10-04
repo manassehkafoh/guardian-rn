@@ -5,6 +5,9 @@ import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.j
 import { PolicyEngine } from '../core/policy.js';
 import { computeHmac } from '../core/HmacEnvelope.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // useGuardian — primary SDK entry point
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,6 +261,16 @@ function generateSessionKey(): Uint8Array {
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
+
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    return globalThis.crypto.getRandomValues(key);
+  }
+
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production');
+  if (!isDev) {
+    throw new Error('Math.random() is not cryptographically secure and should not be used in production.');
+  }
+
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
 }
