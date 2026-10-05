@@ -1,0 +1,4 @@
+## 2025-02-23 - Insecure Cryptographic Fallback in React Native
+**Vulnerability:** A fallback generation path for the cryptographic session key utilized `Math.random()` when the native `GuardianKeyProvider` module was unavailable.
+**Learning:** The fallback was primarily meant for test environments but lacked proper constraints, allowing it to potentially execute in production environments if the native module failed to load, leading to weak entropy for session keys.
+**Prevention:** When providing fallbacks for cryptographic operations, ensure that insecure routines (e.g., `Math.random()`) are explicitly restricted to development/test environments using environment variable checks (`NODE_ENV` or `__DEV__`), and always attempt to use standard secure alternatives (e.g., `globalThis.crypto.getRandomValues`) before degrading security.

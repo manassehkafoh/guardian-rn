@@ -5,6 +5,9 @@ import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.j
 import { PolicyEngine } from '../core/policy.js';
 import { computeHmac } from '../core/HmacEnvelope.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // useGuardian — primary SDK entry point
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,6 +258,21 @@ function generateSessionKey(): Uint8Array {
     const raw = NativeModules.GuardianKeyProvider?.generateSessionKey();
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
+
+  // Fallback to Web Crypto API if available
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Prevent insecure random fallback in production
+  if (
+    (typeof __DEV__ !== 'undefined' && __DEV__ === false) ||
+    process.env.NODE_ENV === 'production'
+  ) {
+    throw new Error('Insecure Math.random fallback for cryptographic key generation is disabled in production environments.');
+  }
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
