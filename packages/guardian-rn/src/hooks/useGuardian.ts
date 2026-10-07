@@ -232,6 +232,9 @@ function generateSessionId(): string {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 /**
  * Generate a 32-byte cryptographic session key.
  *
@@ -240,7 +243,7 @@ function generateSessionId(): string {
  * generation. This ensures the key is generated in the platform's trusted
  * execution environment.
  *
- * Falls back to Math.random() in test and Storybook environments where the
+ * Falls back to globalThis.crypto / Math.random() in test and Storybook environments where the
  * native module is not linked. This fallback produces a key that is NOT
  * cryptographically secure — tests that rely on HMAC correctness must use
  * a fixed test key rather than this fallback.
@@ -256,8 +259,21 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // Ensure this insecure fallback NEVER runs in production.
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+  if (!isDev) {
+    throw new Error('FATAL: Native GuardianKeyProvider is unavailable in production. Refusing to fall back to insecure PRNG.');
+  }
+
   const key = new Uint8Array(32);
+
+  // Attempt to use a stronger JS fallback if available (e.g. Node 19+ global crypto)
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
 }
