@@ -185,6 +185,9 @@ export function useGuardian(config: GuardianConfig): void {
   }, []);
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -256,7 +259,20 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // Attempt to use standard Web Crypto API if available (e.g. some modern JS environments).
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Fallback: Math.random is not a CSPRNG. It is only permitted in development/test.
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env['NODE_ENV'] !== 'production';
+  if (!isDev) {
+    throw new Error('GuardianKeyProvider is required in production for secure session key generation.');
+  }
+
+  // Test/CI fallback: fine for unit tests where crypto isn't polyfilled.
   const key = new Uint8Array(32);
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
