@@ -1,0 +1,4 @@
+## 2024-05-28 - Insecure Fallback for Cryptographic Key Generation
+**Vulnerability:** `generateSessionKey` in `@guardian/rn` falls back to `Math.random()` to generate the 32-byte cryptographic session key when the native `GuardianKeyProvider` module is unavailable. In production, an improperly linked native module would silently result in predictable HMAC keys, allowing attackers to forge `ThreatPayload` messages.
+**Learning:** Fallback mechanisms intended for Test/CI environments can silently leak into production if platform-specific abstractions (like React Native native modules) fail to load without throwing hard errors.
+**Prevention:** Cryptographic fallbacks must explicitly verify the environment (e.g., `__DEV__` or `NODE_ENV === 'production'`) and throw hard errors in production rather than degrading silently. They should also attempt to use standard Web APIs (`globalThis.crypto.getRandomValues`) before falling back to insecure PRNGs like `Math.random()`.

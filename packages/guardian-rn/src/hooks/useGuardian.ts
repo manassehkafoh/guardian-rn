@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
 import type { ThreatEvent } from '../events/ThreatEvent.js';
@@ -256,9 +259,18 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
+  const isDev = (typeof __DEV__ !== 'undefined' && __DEV__) || process.env['NODE_ENV'] !== 'production';
+  if (!isDev) {
+    throw new Error('GuardianKeyProvider native module is required in production environments.');
+  }
+
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(key);
+  } else {
+    for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
+  }
   return key;
 }
 
