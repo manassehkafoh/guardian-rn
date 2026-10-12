@@ -1,0 +1,4 @@
+## 2025-05-24 - [Harden Session Key Generation Fallback]
+**Vulnerability:** A `Math.random()` fallback was used for cryptographic key generation in `generateSessionKey`. While intended for tests, it could inadvertently run in production if the native `GuardianKeyProvider` module failed to initialize, resulting in weak, predictable keys.
+**Learning:** Even when random generation functions are documented as 'test only', developers often fail to enforce this restriction in code, leading to weak keys in production if environmental assumptions (like native module availability) break.
+**Prevention:** Always prioritize stronger entropy sources (like `globalThis.crypto.getRandomValues`) if native modules fail. For fallbacks that are genuinely unsecure (like `Math.random()`), explicitly throw an error in production environments (e.g., checking `__DEV__` or `NODE_ENV`) to fail fast and securely rather than silently continuing with weak keys.
