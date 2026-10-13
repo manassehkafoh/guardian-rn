@@ -189,6 +189,9 @@ export function useGuardian(config: GuardianConfig): void {
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
+
 /**
  * Subscribe to React Native's AppState 'change' event and forward transitions
  * to all engines that implement the optional throttle() method.
@@ -256,8 +259,18 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+  if (!isDev) {
+    throw new Error('GuardianKeyProvider native module is required in production for secure key generation.');
+  }
+
+  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
 }

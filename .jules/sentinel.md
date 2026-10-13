@@ -1,0 +1,4 @@
+## 2023-10-13 - Weak Cryptography Fallback in Session Key Generation
+**Vulnerability:** The SDK used `Math.random()` to generate a cryptographic 32-byte session key if the native `GuardianKeyProvider` was unavailable, resulting in predictable and weak keys that could compromise event signature integrity (HMAC validation).
+**Learning:** The fallback was primarily meant for tests but leaked into any environment lacking the native module. Non-secure random sources should never be silently substituted for cryptographic operations.
+**Prevention:** Hardened the fallback to explicitly use `globalThis.crypto.getRandomValues`. If the environment still falls back to `Math.random()`, explicitly check if the application is running in production (via `__DEV__` or `NODE_ENV`) and throw a fatal error rather than generating insecure keys.
