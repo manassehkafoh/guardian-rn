@@ -1,0 +1,4 @@
+## 2026-10-15 - Prevent insecure Math.random fallback for cryptographic keys
+**Vulnerability:** The `generateSessionKey` function silently degraded to the non-cryptographically secure `Math.random()` for generating session HMAC keys if the native `GuardianKeyProvider` module failed to load.
+**Learning:** Native security modules can fail silently on certain platforms or configurations. Allowing an insecure fallback to run in production completely breaks the cryptographic guarantees of the HMAC signatures.
+**Prevention:** Always verify that a CSPRNG is used for cryptographic key material. Provide secondary secure fallbacks (like `globalThis.crypto.getRandomValues`) where possible. For test-only insecure fallbacks, explicitly verify the environment (e.g., using `__DEV__` or `NODE_ENV`) and fail securely (throw an error) in production if a secure source is unavailable.
