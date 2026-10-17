@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.js';
 import { PolicyEngine } from '../core/policy.js';
@@ -240,10 +243,9 @@ function generateSessionId(): string {
  * generation. This ensures the key is generated in the platform's trusted
  * execution environment.
  *
- * Falls back to Math.random() in test and Storybook environments where the
- * native module is not linked. This fallback produces a key that is NOT
- * cryptographically secure — tests that rely on HMAC correctness must use
- * a fixed test key rather than this fallback.
+ * Falls back to globalThis.crypto.getRandomValues if available.
+ * If no CSPRNG is available, it throws an error in production, but falls back
+ * to Math.random() in dev/test environments.
  */
 function generateSessionKey(): Uint8Array {
   try {
@@ -255,6 +257,19 @@ function generateSessionKey(): Uint8Array {
     const raw = NativeModules.GuardianKeyProvider?.generateSessionKey();
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
+
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    const key = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  const isDev = (typeof __DEV__ !== 'undefined' && __DEV__) ||
+                (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+
+  if (!isDev) {
+    throw new Error('CSPRNG not available. Cannot securely generate session key.');
+  }
 
   // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
