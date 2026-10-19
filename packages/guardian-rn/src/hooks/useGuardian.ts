@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { GuardianConfig } from '../config/GuardianConfig.js';
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __DEV__: boolean | undefined;
 import type { ThreatEvent } from '../events/ThreatEvent.js';
 import type { EngineContext, Engine, EngineHealthTick } from '../engine/Engine.js';
 import { PolicyEngine } from '../core/policy.js';
@@ -256,8 +259,20 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   const key = new Uint8Array(32);
+
+  // Try standard crypto first (Node / modern web contexts)
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    return globalThis.crypto.getRandomValues(key);
+  }
+
+  // Fallback to Math.random only in explicit development/test environments
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+  if (!isDev) {
+    throw new Error('Guardian: Cannot generate secure session key in production without native GuardianKeyProvider or global crypto');
+  }
+
+  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
 }
