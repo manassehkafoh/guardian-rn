@@ -1,0 +1,4 @@
+## 2024-10-20 - [Fix weak session key generation in production fallback]
+**Vulnerability:** The session key generation mechanism (`generateSessionKey` in `useGuardian.ts`) silently fell back to an insecure `Math.random()` loop if the native secure key provider was unavailable in a production environment. `Math.random()` is not a cryptographically secure pseudo-random number generator (CSPRNG), making the session key highly predictable.
+**Learning:** Fallbacks implemented for test environments can silently and dangerously degrade production security if not explicitly bounded by environment checks (e.g., `__DEV__` or `NODE_ENV`).
+**Prevention:** Always wrap insecure test-only fallbacks with hard environment checks that throw an error if executed in a production context, forcing a fail-secure state rather than silently succeeding with weak cryptography. Add `globalThis.crypto.getRandomValues()` as a standard fallback before resorting to test-only insecure entropy.
