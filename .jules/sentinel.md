@@ -1,0 +1,4 @@
+## 2023-10-21 - Insecure PRNG Fallback in Native Modules
+**Vulnerability:** The SDK used `Math.random()` to generate a 32-byte cryptographic session key if the native `GuardianKeyProvider` module failed to load.
+**Learning:** Native module failures (e.g., mislinked modules, platform incompatibilities) could silently result in production builds using `Math.random()`, which is predictable and insecure for key generation. The fallback was intended for tests/CI but was not structurally scoped to those environments.
+**Prevention:** Avoid `Math.random()` for cryptographic operations. When a fallback is explicitly required for non-production environments (like tests), structurally gate it behind an environment check (`__DEV__` or `NODE_ENV !== 'production'`) and throw a fatal error in production. When possible, attempt to use `globalThis.crypto.getRandomValues()` before falling back to `Math.random()`.
