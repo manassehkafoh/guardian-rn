@@ -1,0 +1,4 @@
+## 2023-10-22 - Hardcoded Passwords in Infrastructure Configuration
+**Vulnerability:** Found hardcoded credentials (`changeme`, `admin`) for ElasticSearch and Grafana services in `packages/collector/docker-compose.yml`.
+**Learning:** Default infrastructure configurations often come with default passwords to lower the barrier to entry, but when committed to a repository, they can easily leak into deployed environments or be exposed to unauthorized users with repository access.
+**Prevention:** Always use environment variables for sensitive infrastructure configuration, utilizing Docker Compose's required variable syntax (e.g., `${PASSWORD:?Error}`) to ensure services fail securely during startup if credentials are not provided. Provide a `.env.example` file to document required secrets without committing real values.
