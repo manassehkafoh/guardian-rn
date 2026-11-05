@@ -256,8 +256,21 @@ function generateSessionKey(): Uint8Array {
     if (raw && raw.length === 32) return new Uint8Array(raw);
   } catch { /* native module not available — fall through */ }
 
-  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+
+  if (!isDev) {
+    throw new Error('CRITICAL SECURITY: Native GuardianKeyProvider is unavailable. Refusing to fall back to insecure key generation in production.');
+  }
+
   const key = new Uint8Array(32);
+
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
+    globalThis.crypto.getRandomValues(key);
+    return key;
+  }
+
+  // Test/CI fallback: Math.random is not a CSPRNG but is fine for unit tests.
   for (let i = 0; i < 32; i++) key[i] = (Math.random() * 256) | 0;
   return key;
 }
